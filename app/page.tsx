@@ -11,6 +11,7 @@ export default function Home() {
           width={180}
           height={38}
           priority
+          sizes="(max-width: 640px) 180px, 180px"
         />
         <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
           <li className="mb-2 tracking-[-.01em]">
@@ -38,6 +39,9 @@ export default function Home() {
               alt="Vercel logomark"
               width={20}
               height={20}
+              loading="lazy"
+              decoding="async"
+              sizes="20px"
             />
             Deploy now
           </a>
@@ -64,6 +68,9 @@ export default function Home() {
             alt="File icon"
             width={16}
             height={16}
+            loading="lazy"
+            decoding="async"
+            sizes="16px"
           />
           Learn
         </a>
@@ -79,6 +86,9 @@ export default function Home() {
             alt="Window icon"
             width={16}
             height={16}
+            loading="lazy"
+            decoding="async"
+            sizes="16px"
           />
           Examples
         </a>
@@ -94,6 +104,9 @@ export default function Home() {
             alt="Globe icon"
             width={16}
             height={16}
+            loading="lazy"
+            decoding="async"
+            sizes="16px"
           />
           Go to nextjs.org →
         </a>
