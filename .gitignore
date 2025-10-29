@@ -60,4 +60,4 @@ Thumbs.db
 *.temp
 
 # Dropbox
-.dropbox/
+.dropbox/*.png
