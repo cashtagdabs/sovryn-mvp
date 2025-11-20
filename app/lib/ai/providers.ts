@@ -1,7 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import Groq from 'groq-sdk';
-import { EventSourceParserStream } from 'eventsource-parser/stream';
 
 export interface AIProvider {
   id: string;
