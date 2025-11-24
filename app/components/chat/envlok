@@ -1,0 +1,4 @@
+POSTGRES_PRISMA_URL=postgresql://postgres:Ashybaby2025@aws-1-us-east-2.pooler.supabase.com:5432/postgres
+POSTGRES_URL_NON_POOLING=postgresql://postgres:Ashybaby2025@aws-1-us-east-2.pooler.supabase.com:5432/postgres
+DATABASE_URL=postgresql://postgres:Ashybaby2025@aws-1-us-east-2.pooler.supabase.com:5432/postgres
+POSTGRES_PASSWORD=Ashybaby2025

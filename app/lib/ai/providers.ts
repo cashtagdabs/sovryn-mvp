@@ -107,9 +107,24 @@ export const AI_PROVIDERS: AIProvider[] = [
         maxTokens: 4096,
         inputCost: 0.7,
         outputCost: 0.8,
-      },
+      }
     ],
   },
+  {
+    id: 'ollama',
+    name: 'Ollama',
+    models: [
+      {
+        id: 'llama2-7b-uncensored:q4_0',
+        name: 'Llama 2 7B Uncensored (Ollama)',
+        provider: 'ollama',
+        contextWindow: 4096,
+        maxTokens: 2048,
+        inputCost: 0,
+        outputCost: 0,
+      }
+    ],
+  }
 ];
 
 export const getModelById = (modelId: string): AIModel | undefined => {
@@ -128,6 +143,9 @@ export const getProviderById = (providerId: string): AIProvider | undefined => {
 let openaiClient: OpenAI | null = null;
 let anthropicClient: Anthropic | null = null;
 let groqClient: Groq | null = null;
+
+// Optionally add an Ollama client if you have a local JS SDK, for now just include this for uniformity
+// let ollamaClient: any | null = null;
 
 export const getOpenAIClient = () => {
   if (!openaiClient && process.env.OPENAI_API_KEY) {
@@ -155,3 +173,6 @@ export const getGroqClient = () => {
   }
   return groqClient;
 };
+
+// Placeholder for local ollama client pattern if you add a library
+// export const getOllamaClient = () => { ... };

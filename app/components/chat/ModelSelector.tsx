@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Sparkles, Brain, Zap, Crown } from 'lucide-react';
+import { ChevronDown, Sparkles, Brain, Zap, Crown, Bot } from 'lucide-react';
 import { AI_PROVIDERS } from '@/app/lib/ai/providers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/app/lib/utils';
@@ -22,6 +22,8 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
         return Brain;
       case 'groq':
         return Zap;
+      case 'ollama':
+        return Bot;
       default:
         return Sparkles;
     }
@@ -119,7 +121,12 @@ export function ModelSelector({ value, onChange }: ModelSelectorProps) {
                                 <div className="mt-0.5 flex items-center space-x-3 text-xs text-white/50">
                                   <span>{(model.contextWindow / 1000).toFixed(0)}K context</span>
                                   <span>•</span>
-                                  <span>${model.inputCost}/1M tokens</span>
+                                  <span>
+                                    {model.inputCost === 0
+                                      ? 'free'
+                                      : `$${model.inputCost}/1M tokens`
+                                    }
+                                  </span>
                                 </div>
                               </div>
                             </div>

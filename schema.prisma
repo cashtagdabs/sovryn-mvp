@@ -7,7 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // User model integrated with Clerk
@@ -154,3 +153,4 @@ model SavedPrompt {
   @@index([userId])
   @@index([isPublic])
 }
+

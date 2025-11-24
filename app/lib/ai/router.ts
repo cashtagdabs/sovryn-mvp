@@ -1,6 +1,8 @@
 import { getOpenAIClient, getAnthropicClient, getGroqClient, getModelById } from './providers';
 import { Message } from '@prisma/client';
 
+const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'https://magnolia-nonperjured-lani.ngrok-free.dev';
+
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -20,9 +22,9 @@ export interface ChatCompletionResponse {
   content: string;
   model: string;
   usage?: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
   };
 }
 
@@ -42,6 +44,8 @@ export class AIRouter {
         return this.chatWithAnthropic(options);
       case 'groq':
         return this.chatWithGroq(options);
+      case 'ollama':
+        return this.chatWithOllama(options);
       default:
         throw new Error(`Provider ${provider} not supported`);
     }
@@ -64,6 +68,9 @@ export class AIRouter {
         break;
       case 'groq':
         yield* this.chatStreamGroq(options);
+        break;
+      case 'ollama':
+        yield* this.chatStreamOllama(options);
         break;
       default:
         throw new Error(`Provider ${provider} not supported`);
@@ -227,6 +234,46 @@ export class AIRouter {
       if (content) {
         yield content;
       }
+    }
+  }
+
+  private async chatWithOllama(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
+    const response = await fetch(`${OLLAMA_API_URL}/api/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: options.modelId,
+        messages: options.messages,
+        temperature: options.temperature,
+        max_tokens: options.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Ollama request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      content: data?.response || '',
+      model: options.modelId,
+      usage: data?.usage
+        ? {
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+            totalTokens: data.usage.total_tokens,
+          }
+        : data?.usage?.total_tokens
+        ? { totalTokens: data.usage.total_tokens }
+        : undefined,
+    };
+  }
+
+  private async *chatStreamOllama(options: ChatCompletionOptions): AsyncGenerator<string> {
+    const completion = await this.chatWithOllama(options);
+    if (completion.content) {
+      yield completion.content;
     }
   }
 }

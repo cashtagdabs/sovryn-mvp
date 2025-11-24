@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Get AI response
+    // Get AI response via router (includes Ollama/local models)
     const response = await aiRouter.chat({
       modelId: validatedData.modelId,
       messages: validatedData.messages,
@@ -98,6 +98,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       conversationId: conversation.id,
     });
+
 
     // Save assistant message
     const assistantMessage = await prisma.message.create({

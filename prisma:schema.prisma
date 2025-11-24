@@ -1,0 +1,155 @@
+// SOVRYN/PRIMEX Database Schema
+// Production-ready schema for the world's #1 AI platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User model integrated with Clerk
+model User {
+  id              String         @id @default(cuid())
+  clerkId         String         @unique
+  email           String         @unique
+  name            String?
+  avatarUrl       String?
+  subscription    Subscription?
+  conversations   Conversation[]
+  messages        Message[]
+  searches        Search[]
+  savedPrompts    SavedPrompt[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+// Subscription management
+model Subscription {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId   String   @unique
+  stripeSubscriptionId String?
+  stripePriceId      String?
+  stripeCurrentPeriodEnd DateTime?
+  plan               Plan     @default(FREE)
+  status             SubscriptionStatus @default(ACTIVE)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+  SOVEREIGN
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  UNPAID
+  INCOMPLETE
+}
+
+// Conversation management
+model Conversation {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  model       AIModel    @default(GPT4)
+  messages    Message[]
+  searches    Search[]
+  isArchived  Boolean    @default(false)
+  isPinned    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@index([userId])
+}
+
+// Message history
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String       @db.Text
+  model          AIModel?
+  citations      Citation[]
+  tokenCount     Int?
+  createdAt      DateTime     @default(now())
+  
+  @@index([conversationId])
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum AIModel {
+  GPT4
+  GPT4_TURBO
+  GPT3_5
+  CLAUDE_3_OPUS
+  CLAUDE_3_SONNET
+  CLAUDE_3_HAIKU
+  GROQ_LLAMA
+  GROQ_MIXTRAL
+  PRIMEX_SOVEREIGN
+}
+
+// Search and citation tracking
+model Search {
+  id             String       @id @default(cuid())
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query          String
+  results        Json
+  createdAt      DateTime     @default(now())
+  
+  @@index([userId])
+}
+
+// Citation references
+model Citation {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  title     String
+  url       String
+  snippet   String   @db.Text
+  order     Int
+  createdAt DateTime @default(now())
+  
+  @@index([messageId])
+}
+
+// Saved prompts library
+model SavedPrompt {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  prompt      String   @db.Text
+  category    String?
+  tags        String[]
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([isPublic])
+}

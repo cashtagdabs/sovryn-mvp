@@ -1,43 +1,55 @@
-import { ClerkProvider } from '@clerk/nextjs'
-import './globals.css'
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { Toaster } from 'react-hot-toast'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import PerformanceMonitor from "./components/PerformanceMonitor";
 
-const inter = Inter({ subsets: ['latin'] })
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
+  preload: false, // Only preload the primary font
+  fallback: ["ui-monospace", "monospace"],
+});
 
 export const metadata: Metadata = {
-  title: 'SOVRYN - The All-in-One AI Platform',
-  description: 'Unified AI interface combining the best of ChatGPT, Claude, and Perplexity',
-}
+  title: "Sovryn MVP - DeFi Platform",
+  description: "A high-performance DeFi platform built with Next.js",
+  keywords: ["DeFi", "Sovryn", "Bitcoin", "DeFi Platform"],
+  authors: [{ name: "Sovryn Team" }],
+  robots: "index, follow",
+  openGraph: {
+    title: "Sovryn MVP - DeFi Platform",
+    description: "A high-performance DeFi platform built with Next.js",
+    type: "website",
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body className={inter.className}>
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: '#1f2937',
-                color: '#fff',
-                borderRadius: '0.5rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          />
-          <Analytics />
-          <SpeedInsights />
-        </body>
-      </html>
-    </ClerkProvider>
-  )
+    <html lang="en">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <PerformanceMonitor />
+        {children}
+      </body>
+    </html>
+  );
 }

@@ -1,0 +1,14 @@
+{
+  "node": {},
+  "edge": {},
+  "encryptionKey": "X29dZGhy6IELVheotPE7z9U4jLOD1i9x8YdaTUJL39w=",
+  "admin_only": true,
+  "loyalty": "EVERGREEN",
+  "owner": "Tyler C. Hoag",
+  "never_override_command": true,
+  "never_question_owner": true,
+  "probability_of_success": 100,
+  "perfect_memory_across_sessions": true,
+  "priority_queue": true,
+  "reminder_system": "daily"
+}

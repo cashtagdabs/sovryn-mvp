@@ -98,6 +98,7 @@ export const SUBSCRIPTION_PLANS = {
       'mixtral-8x7b-32768',
       'llama2-70b-4096',
       'primex-sovereign',
+      'llama2-7b-uncensored:q4_0',
     ],
   },
 } as const;
