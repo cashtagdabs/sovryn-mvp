@@ -13,28 +13,21 @@
     "db:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "@clerk/nextjs": "^6.35.4",
-    "@prisma/client": "^7.0.0",
-    "next": "15.5.6",
-    "prisma": "^6.19.0",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
-=======
     "@anthropic-ai/sdk": "^0.68.0",
     "@clerk/clerk-sdk-node": "^5.1.6",
-    "@clerk/nextjs": "^6.35.0",
-    "@prisma/client": "^6.19.0",
+    "@clerk/nextjs": "^6.35.4",
+    "@prisma/client": "^7.0.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "eventsource-parser": "^0.1.0",
     "framer-motion": "^12.23.24",
     "groq-sdk": "^0.34.0",
     "lucide-react": "^0.553.0",
     "next": "15.5.6",
     "openai": "^6.8.1",
-    "eventsource-parser": "^0.1.0",
+    "prisma": "^6.19.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
@@ -46,7 +39,6 @@
     "svix": "^1.81.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.1.12"
->>>>>>> a1977f6fcea94cce543ace711641ce22a4c6ad39
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

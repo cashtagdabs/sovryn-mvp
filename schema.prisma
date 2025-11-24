@@ -7,6 +7,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // User model integrated with Clerk
@@ -68,7 +69,7 @@ model Conversation {
   isPinned    Boolean    @default(false)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
-  
+
   @@index([userId])
 }
 
@@ -85,7 +86,7 @@ model Message {
   citations      Citation[]
   tokenCount     Int?
   createdAt      DateTime     @default(now())
-  
+
   @@index([conversationId])
 }
 
@@ -117,7 +118,7 @@ model Search {
   query          String
   results        Json
   createdAt      DateTime     @default(now())
-  
+
   @@index([userId])
 }
 
@@ -131,7 +132,7 @@ model Citation {
   snippet   String   @db.Text
   order     Int
   createdAt DateTime @default(now())
-  
+
   @@index([messageId])
 }
 
@@ -149,8 +150,7 @@ model SavedPrompt {
   usageCount  Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([isPublic])
 }
-
