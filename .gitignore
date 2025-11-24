@@ -61,3 +61,6 @@ Thumbs.db
 
 # Dropbox
 .dropbox/*.png
+
+# clerk configuration (can include secrets)
+/.clerk/
