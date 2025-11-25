@@ -9,12 +9,12 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['react', 'react-dom'],
   },
-  
+
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  
+
   // Image optimization
   images: {
     formats: ['image/webp', 'image/avif'],
@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  
+
   // Bundle optimization
   webpack: (config, { dev, isServer }) => {
     // Optimize bundle size
@@ -38,10 +38,10 @@ const nextConfig: NextConfig = {
         },
       };
     }
-    
+
     return config;
   },
-  
+
   // Enable compression
   compress: true,
 };
