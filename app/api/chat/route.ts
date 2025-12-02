@@ -124,9 +124,24 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Chat API error:', error);
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Invalid request data', details: error.errors }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid request data' },
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    // Surface more detailed error info so the client can show what went wrong
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred in chat handler';
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: message,
+      },
+      { status: 500 }
+    );
   }
 }

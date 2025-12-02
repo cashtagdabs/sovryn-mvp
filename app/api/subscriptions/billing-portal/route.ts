@@ -33,6 +33,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error('Billing portal error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred in billing-portal handler';
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: message,
+      },
+      { status: 500 }
+    );
   }
 }

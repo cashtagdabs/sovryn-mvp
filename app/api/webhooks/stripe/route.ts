@@ -6,7 +6,8 @@ import Stripe from 'stripe';
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = headers().get('Stripe-Signature') as string;
+  const headerPayload = await headers();
+  const signature = headerPayload.get('Stripe-Signature') as string;
 
   let event: Stripe.Event;
 
@@ -79,7 +80,10 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
       data: {
         stripeSubscriptionId: subscription.id,
         stripePriceId: priceId,
-        stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+        // Guard access to current_period_end using a loose cast to satisfy TS
+        stripeCurrentPeriodEnd: (subscription as any).current_period_end
+          ? new Date((subscription as any).current_period_end * 1000)
+          : null,
         plan: plan as any,
         status: subscription.status.toUpperCase() as any,
       },
@@ -94,7 +98,9 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
     where: { stripeCustomerId: customerId },
     data: {
       status: 'CANCELED',
-      stripeCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+      stripeCurrentPeriodEnd: (subscription as any).current_period_end
+        ? new Date((subscription as any).current_period_end * 1000)
+        : null,
     },
   });
 }

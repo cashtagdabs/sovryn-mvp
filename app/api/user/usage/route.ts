@@ -39,6 +39,16 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('User usage API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred in user/usage handler';
+
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: message,
+      },
+      { status: 500 }
+    );
   }
 }

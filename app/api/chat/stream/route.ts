@@ -144,9 +144,15 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Chat stream error:', error);
+
     if (error instanceof z.ZodError) {
       return new Response('Invalid request data', { status: 400 });
     }
-    return new Response('Internal server error', { status: 500 });
+
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred in chat stream handler';
+
+    // Return a plain text error so the client can at least see *why* it failed
+    return new Response(`Internal server error: ${message}`, { status: 500 });
   }
 }
