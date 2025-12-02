@@ -54,6 +54,8 @@ CREATE TABLE "Message" (
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
 );
 
+CREATE INDEX "Message_userId_idx" ON "Message" ("userId");
+
 CREATE TABLE "Search" (
     "id" TEXT NOT NULL,
     "conversationId" TEXT,
