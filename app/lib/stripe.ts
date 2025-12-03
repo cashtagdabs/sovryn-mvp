@@ -1,13 +1,7 @@
-import Stripe from 'stripe';
+// Client-safe Stripe utilities - NO server secrets
+// Server-only Stripe operations are in stripe.server.ts
 
-// Centralized, explicit Stripe env validation so failures are obvious
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-
-if (!STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY. Set it in your environment (.env.local / Vercel).');
-}
 
 if (!STRIPE_PUBLISHABLE_KEY) {
   console.warn(
@@ -15,22 +9,8 @@ if (!STRIPE_PUBLISHABLE_KEY) {
   );
 }
 
-if (!STRIPE_WEBHOOK_SECRET) {
-  console.warn(
-    '[Stripe] STRIPE_WEBHOOK_SECRET is not set. Webhook verification will fail in production.'
-  );
-}
-
-export const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  // Cast apiVersion to any to avoid overly strict typing from the Stripe SDK
-  apiVersion: '2023-10-16' as any,
-  typescript: true,
-});
-
 export const STRIPE_CONFIG = {
   publishableKey: STRIPE_PUBLISHABLE_KEY,
-  secretKey: STRIPE_SECRET_KEY,
-  webhookSecret: STRIPE_WEBHOOK_SECRET,
 };
 
 // Subscription tiers

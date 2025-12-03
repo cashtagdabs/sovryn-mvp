@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { stripe, getPlanFromPriceId } from '@/app/lib/stripe';
+import { getStripeClient } from '@/app/lib/stripe.server';
+import { getPlanFromPriceId } from '@/app/lib/stripe';
 import { prisma } from '@/app/lib/db';
 import Stripe from 'stripe';
 
@@ -12,7 +13,8 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    const stripeInstance = getStripeClient();
+    event = stripeInstance.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/app/lib/db';
-import { stripe, createCustomer, createSubscription, SUBSCRIPTION_PLANS } from '@/app/lib/stripe';
+import { createCustomer, createSubscription, getStripeClient } from '@/app/lib/stripe.server';
+import { SUBSCRIPTION_PLANS } from '@/app/lib/stripe';
 import { z } from 'zod';
 
 const createSubscriptionSchema = z.object({
