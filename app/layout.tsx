@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import PerformanceMonitor from "./components/PerformanceMonitor";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ThemeProvider } from "./components/ThemeProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
   preload: true,
   fallback: ["system-ui", "arial"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   display: "swap",
-  preload: false, // Only preload the primary font
+  preload: false,
   fallback: ["ui-monospace", "monospace"],
 });
 
@@ -46,12 +47,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-          <ClerkProvider>
-        <PerformanceMonitor />
-        {children}
-       </ClerkProvider>
+        <ClerkProvider>
+          <ThemeProvider>
+            <PerformanceMonitor />
+            {children}
+          </ThemeProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

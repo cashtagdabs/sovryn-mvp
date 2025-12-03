@@ -49,7 +49,7 @@ export function useChat(initialConversationId?: string) {
 
     // Store the original message count for safe rollback
     const originalMessageCount = messages.length;
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
@@ -59,6 +59,7 @@ export function useChat(initialConversationId?: string) {
       const response = await fetch('/api/chat/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           modelId,
           messages: [...messages, userMessage],
@@ -67,12 +68,26 @@ export function useChat(initialConversationId?: string) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Try to read server response for better debugging
+        let bodyText = '';
+        try {
+          bodyText = await response.text();
+        } catch (e) {
+          bodyText = '<unreadable response body>';
+        }
+        console.error('Chat send failed', { status: response.status, body: bodyText });
+        if (response.status === 401) {
+          // Not authenticated — guide user to sign in
+          // Use window navigation here because this is client hook
+          window.location.href = '/sign-in';
+          return;
+        }
+        throw new Error('Failed to send message: ' + bodyText);
       }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      
+
       let assistantMessage: Message = {
         role: 'assistant',
         content: '',
@@ -94,7 +109,7 @@ export function useChat(initialConversationId?: string) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                
+
                 if (data.type === 'conversation') {
                   setConversationId(data.id);
                   if (!initialConversationId) {
@@ -121,7 +136,7 @@ export function useChat(initialConversationId?: string) {
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Failed to send message. Please try again.');
-      
+
       // Safe rollback: restore to original message count
       setMessages((prev) => {
         if (assistantMessageAdded) {

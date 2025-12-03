@@ -72,24 +72,35 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   if (!plan) return;
 
   // Find user by Stripe customer ID
-  const userSubscription = await prisma.subscription.findUnique({
+  const userSubscription = await prisma.subscription.findFirst({
     where: { stripeCustomerId: customerId },
   });
 
   if (userSubscription) {
+    // Map Stripe status to our status
+    let dbStatus = 'INCOMPLETE';
+    if (subscription.status === 'active') {
+      dbStatus = 'ACTIVE';
+    } else if (subscription.status === 'past_due') {
+      dbStatus = 'PAST_DUE';
+    } else if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+      dbStatus = 'CANCELED';
+    }
+
     await prisma.subscription.update({
-      where: { stripeCustomerId: customerId },
+      where: { id: userSubscription.id },
       data: {
         stripeSubscriptionId: subscription.id,
         stripePriceId: priceId,
-        // Guard access to current_period_end using a loose cast to satisfy TS
         stripeCurrentPeriodEnd: (subscription as any).current_period_end
           ? new Date((subscription as any).current_period_end * 1000)
           : null,
         plan: plan as any,
-        status: subscription.status.toUpperCase() as any,
+        status: dbStatus as any,
       },
     });
+
+    console.log(`[Webhook] Subscription ${subscription.id} updated to ${dbStatus}`);
   }
 }
 
@@ -105,24 +116,30 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
         : null,
     },
   });
+
+  console.log(`[Webhook] Subscription canceled for customer ${customerId}`);
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
   // Update subscription to active if payment succeeded
-  await prisma.subscription.updateMany({
+  const result = await prisma.subscription.updateMany({
     where: { stripeCustomerId: customerId },
     data: { status: 'ACTIVE' },
   });
+
+  console.log(`[Webhook] Payment succeeded for customer ${customerId}, updated ${result.count} subscription(s) to ACTIVE`);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string;
 
   // Update subscription status to past due
-  await prisma.subscription.updateMany({
+  const result = await prisma.subscription.updateMany({
     where: { stripeCustomerId: customerId },
     data: { status: 'PAST_DUE' },
   });
+
+  console.log(`[Webhook] Payment failed for customer ${customerId}, updated ${result.count} subscription(s) to PAST_DUE`);
 }

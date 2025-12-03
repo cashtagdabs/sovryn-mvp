@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUserId } from '@/app/lib/auth';
 import { prisma } from '@/app/lib/db';
-import { createCustomer, createSubscription, getStripeClient } from '@/app/lib/stripe.server';
+import { createCustomer, createCheckoutSession } from '@/app/lib/stripe.server';
 import { SUBSCRIPTION_PLANS } from '@/app/lib/stripe';
 import { z } from 'zod';
 
@@ -11,9 +11,11 @@ const createSubscriptionSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    // Use getUserId which supports the dev header `x-dev-clerk-id` in non-production
+    const userId = await getUserId(req);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('Auth failed in subscriptions/create - no userId');
+      return NextResponse.json({ error: 'Unauthorized - please sign in' }, { status: 401 });
     }
 
     const body = await req.json();
@@ -29,10 +31,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check if user already has an active subscription
-    if (user.subscription && user.subscription.status === 'ACTIVE') {
+    // Allow upgrades from FREE to paid plans; block downgrades/re-purchases
+    if (user.subscription?.status === 'ACTIVE' && user.subscription.plan !== 'FREE') {
       return NextResponse.json(
-        { error: 'User already has an active subscription' },
+        { error: 'User already has an active paid subscription' },
         { status: 400 }
       );
     }
@@ -44,12 +46,14 @@ export async function POST(req: NextRequest) {
 
     let customerId = user.subscription?.stripeCustomerId;
 
-    // Create Stripe customer if doesn't exist
-    if (!customerId) {
+    // Create or recreate Stripe customer if doesn't exist or is a test mock
+    if (!customerId || customerId.startsWith('test_')) {
+      console.log(`[Subscription] Creating real Stripe customer for ${user.email}...`);
       const customer = await createCustomer(user.email, user.name || undefined);
       customerId = customer.id;
+      console.log(`[Subscription] New Stripe customer: ${customerId}`);
 
-      // Update or create subscription record
+      // Update subscription record with real customer ID
       await prisma.subscription.upsert({
         where: { userId: user.id },
         update: { stripeCustomerId: customerId },
@@ -62,28 +66,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create Stripe subscription
-    const subscription = await createSubscription(customerId, selectedPlan.priceId);
+    // Create Stripe checkout session (hosted checkout is better UX than client secret flow)
+    console.log(`[Subscription] Creating Stripe checkout session for customer ${customerId}, plan ${plan}...`);
 
-    // Update database with subscription details
+    const origin = req.nextUrl.origin;
+    const successUrl = `${origin}/dashboard?status=subscription_success&plan=${plan}`;
+    const cancelUrl = `${origin}/subscription?status=checkout_canceled`;
+    
+    const checkoutSession = await createCheckoutSession(
+      customerId,
+      selectedPlan.priceId,
+      successUrl,
+      cancelUrl
+    );
+
+    // Update database with subscription pending state
     await prisma.subscription.update({
       where: { userId: user.id },
       data: {
-        stripeSubscriptionId: subscription.id,
-        stripePriceId: selectedPlan.priceId,
         plan: plan,
         status: 'INCOMPLETE',
+        stripePriceId: selectedPlan.priceId,
       },
     });
 
-    // Return client secret for payment
-    const invoice = subscription.latest_invoice as any;
-    const paymentIntent = invoice?.payment_intent;
+    console.log(`[Subscription] Checkout session created: ${checkoutSession.id}, url: ${checkoutSession.url}`);
 
     return NextResponse.json({
-      subscriptionId: subscription.id,
-      clientSecret: paymentIntent?.client_secret,
-      status: subscription.status,
+      url: checkoutSession.url,
+      sessionId: checkoutSession.id,
     });
   } catch (error) {
     console.error('Create subscription error:', error);

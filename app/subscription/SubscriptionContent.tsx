@@ -38,29 +38,60 @@ export function SubscriptionContent() {
   };
 
   const handleSubscribe = async (planKey: string) => {
-    if (planKey === 'FREE') return;
+    if (planKey === 'FREE') {
+      toast.error('Free plan selected — no action needed');
+      return;
+    }
     
     setLoading(true);
     
     try {
       const response = await fetch('/api/subscriptions/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({ plan: planKey }),
       });
 
-      const data = await response.json();
+      // read response safely
+      const text = await response.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        // not JSON
+        data = { raw: text };
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create subscription');
+        console.error('Create subscription failed', { status: response.status, body: data });
+        if (response.status === 401) {
+          toast.error('You must sign in to subscribe — redirecting to sign-in');
+          router.push('/sign-in');
+          return;
+        }
+        throw new Error(data?.error || data?.raw || 'Failed to create subscription');
       }
 
       // Redirect to Stripe checkout or handle client secret
       if (data.clientSecret) {
-        // Handle Stripe payment intent
+        // Handle Stripe payment intent (legacy flow)
         window.location.href = `/checkout?subscription_id=${data.subscriptionId}&client_secret=${data.clientSecret}`;
+        return;
       }
+
+      // If Stripe returned a hosted checkout URL, open it
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // otherwise show success toast
+      toast.success('Subscription flow started. Follow the next steps.');
     } catch (error: any) {
+      console.error('handleSubscribe error', error);
       toast.error(error.message || 'Failed to create subscription');
     } finally {
       setLoading(false);
@@ -73,12 +104,29 @@ export function SubscriptionContent() {
         method: 'POST',
       });
 
-      const data = await response.json();
+      const text = await response.text();
+      let data: any = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = { raw: text };
+      }
 
-      if (response.ok) {
+      if (!response.ok) {
+        console.error('Billing portal error', { status: response.status, body: data });
+        if (response.status === 401) {
+          toast.error('Sign in required to manage billing');
+          router.push('/sign-in');
+          return;
+        }
+        toast.error('Failed to open billing portal');
+        return;
+      }
+
+      if (data.url) {
         window.location.href = data.url;
       } else {
-        toast.error('Failed to open billing portal');
+        toast.error('Billing portal URL missing from response');
       }
     } catch (error) {
       toast.error('Failed to open billing portal');
@@ -256,19 +304,24 @@ export function SubscriptionContent() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => handleSubscribe(planKey)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSubscribe(planKey);
+                        }}
                         disabled={loading}
+                        type="button"
                         className={cn(
-                          'w-full rounded-lg px-4 py-3 font-semibold text-white transition-all',
+                          'w-full rounded-lg px-4 py-3 font-semibold text-white transition-all cursor-pointer',
                           planKey === 'FREE'
-                            ? 'bg-white/10 hover:bg-white/20'
+                            ? 'bg-white/10 hover:bg-white/20 disabled:cursor-not-allowed'
                             : cn(
-                                'bg-gradient-to-r hover:opacity-90 disabled:opacity-50',
+                                'bg-gradient-to-r hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
                                 planColors[planKey as keyof typeof planColors]
                               )
                         )}
                       >
-                        {planKey === 'FREE' ? 'Downgrade' : 'Upgrade Now'}
+                        {loading ? 'Processing...' : (planKey === 'FREE' ? 'Downgrade' : 'Upgrade Now')}
                       </button>
                     )}
                   </div>

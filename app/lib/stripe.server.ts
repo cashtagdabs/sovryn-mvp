@@ -33,6 +33,21 @@ export async function createSubscription(customerId: string, priceId: string) {
     });
 }
 
+export async function createCheckoutSession(
+    customerId: string,
+    priceId: string,
+    successUrl: string,
+    cancelUrl: string
+) {
+    return await getStripe().checkout.sessions.create({
+        customer: customerId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+    });
+}
+
 export async function createBillingPortalSession(customerId: string, returnUrl: string) {
     return await getStripe().billingPortal.sessions.create({
         customer: customerId,

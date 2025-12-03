@@ -11,9 +11,9 @@
 
 ### Step 1: Sign In & Get Your Clerk ID
 1. Visit: **http://localhost:3000/sign-in**
-2. Create an account with your email
+2. Create an account with your emailpage
 3. After signing in, visit: **http://localhost:3000/debug**
-4. Copy your **Clerk ID** from the debug page
+4. Copy your **Clerk ID** from the debug 
 
 ### Step 2: Grant Yourself SOVEREIGN Access (Full Testing)
 
@@ -44,16 +44,31 @@ Expected response:
 }
 ```
 
-### Step 3: Test Chat Feature
-1. Go back to **http://localhost:3000**
-2. You should see the dashboard and chat interface
-3. Try sending a message
-4. Verify:
-   - Message appears in the UI
-   - Response comes from AI model
-   - Conversation saves to database (check Prisma Studio: `npx prisma studio`)
+### Step 3: Dashboard Integration Test
+1. After signing in, you should be automatically redirected to **http://localhost:3000/dashboard**
+2. Verify:
+   - **Personalized Greeting**: Shows your first name (e.g., "Welcome back, [Name]!")
+   - **Profile Card**: Avatar from Clerk, badges for level/streak
+   - **Quick Stats Grid**: Shows 5 stat cards (Chats, Models, Tokens, Response Time, Satisfaction)
+     - If loading: Shows "Loading your usage…" while fetching `/api/user/usage`
+     - If error: Shows error message in red
+     - If success: Displays real metrics from the database
+   - **Analytics Section**: 3 widgets showing Streak, Leveling, and Achievements
+   - **Engagement Summary**: Detailed metrics for chats, models, tokens processed
+   - **Theme Switcher**: Top-right buttons to toggle Dark/Light/Gradient/Glass themes
+   
+3. Check browser Network tab:
+   - Look for `GET /api/user/usage` call
+   - Response should include: `{ usage: { currentStreak, chatCount, modelsUsed, tokensProcessed, ... } }`
+   - Status should be 200 (or 401 if not authenticated)
 
-### Step 4: Test Subscriptions
+4. Verify Real Data Wiring:
+   - Go to **http://localhost:3000/chat** and send a message
+   - Return to dashboard
+   - **Chat count** should increment (refresh page to see updated value)
+   - Open Prisma Studio (`npx prisma studio`) to confirm the message was saved
+
+### Step 4: Test Chat Feature
 1. Visit: **http://localhost:3000/subscription**
 2. Click "Subscribe to [Plan]"
 3. You'll be redirected to Stripe test payment

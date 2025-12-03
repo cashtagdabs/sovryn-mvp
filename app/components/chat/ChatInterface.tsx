@@ -54,7 +54,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold disabled:opacity-50"
+            className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold disabled:opacity-50 hover:bg-purple-700 transition-colors cursor-pointer disabled:cursor-not-allowed"
           >
             {isLoading ? 'Thinking…' : 'Send'}
           </button>

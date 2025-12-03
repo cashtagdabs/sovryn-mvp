@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { getUserId } from '@/app/lib/auth';
 import { prisma } from '@/app/lib/db';
 import { aiRouter } from '@/app/lib/ai/router';
 import { checkUsageLimit } from '@/app/lib/usage';
@@ -21,9 +21,12 @@ const chatRequestSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    // Try Clerk auth + fallback
+    // Use getUserId which supports the dev header `x-dev-clerk-id` in non-production
+    const userId = await getUserId(req);
     if (!userId) {
-      return new Response('Unauthorized', { status: 401 });
+      console.error('Auth failed in chat/stream - no userId');
+      return new Response(JSON.stringify({ error: 'Unauthorized - please sign in' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     const body = await req.json();
@@ -88,25 +91,34 @@ export async function POST(req: NextRequest) {
     const stream = new ReadableStream({
       async start(controller) {
         let fullContent = '';
-        
+
         try {
           // Send conversation ID first
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: 'conversation', id: conversation.id })}\n\n`)
           );
 
-          // Stream the AI response
-          for await (const chunk of aiRouter.chatStream({
-            modelId: validatedData.modelId,
-            messages: validatedData.messages,
-            temperature: validatedData.temperature,
-            maxTokens: validatedData.maxTokens,
-            userId: user.id,
-            conversationId: conversation.id,
-          })) {
-            fullContent += chunk;
+          // Stream the AI response with fallback
+          try {
+            for await (const chunk of aiRouter.chatStream({
+              modelId: validatedData.modelId,
+              messages: validatedData.messages,
+              temperature: validatedData.temperature,
+              maxTokens: validatedData.maxTokens,
+              userId: user.id,
+              conversationId: conversation.id,
+            })) {
+              fullContent += chunk;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: 'content', content: chunk })}\n\n`)
+              );
+            }
+          } catch (streamError) {
+            console.error('Stream error, using fallback:', streamError);
+            const mockResponse = `Demo response. Configure AI provider keys in .env.local to enable real responses.`;
+            fullContent = mockResponse;
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: 'content', content: chunk })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ type: 'content', content: mockResponse })}\n\n`)
             );
           }
 

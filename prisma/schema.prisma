@@ -2,9 +2,20 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Uncomment ONE datasource block below based on your environment
+
+// For local development (SQLite):
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
+
+// For production (PostgreSQL):
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
 
 // User model integrated with Clerk
 model User {
@@ -31,34 +42,18 @@ model Subscription {
   stripeSubscriptionId   String?
   stripePriceId          String?
   stripeCurrentPeriodEnd DateTime?
-  plan                   Plan     @default(FREE)
-  status                 SubscriptionStatus @default(ACTIVE)
+  plan                   String   @default("FREE")
+  status                 String   @default("ACTIVE")
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }
 
-enum Plan {
-  FREE
-  PRO
-  ENTERPRISE
-  SOVEREIGN
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELED
-  PAST_DUE
-  UNPAID
-  INCOMPLETE
-}
-
-// Conversation management
 model Conversation {
   id          String     @id @default(cuid())
   userId      String
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
-  model       AIModel    @default(GPT4)
+  model       String    @default("GPT4")
   messages    Message[]
   searches    Search[]
   isArchived  Boolean    @default(false)
@@ -76,9 +71,9 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role           MessageRole
-  content        String       @db.Text
-  model          AIModel?
+  role           String
+  content        String
+  model          String?
   citations      Citation[]
   tokenCount     Int?
   createdAt      DateTime     @default(now())
@@ -86,25 +81,6 @@ model Message {
   @@index([conversationId])
 }
 
-enum MessageRole {
-  USER
-  ASSISTANT
-  SYSTEM
-}
-
-enum AIModel {
-  GPT4
-  GPT4_TURBO
-  GPT3_5
-  CLAUDE_3_OPUS
-  CLAUDE_3_SONNET
-  CLAUDE_3_HAIKU
-  GROQ_LLAMA
-  GROQ_MIXTRAL
-  PRIMEX_SOVEREIGN
-}
-
-// Search and citation tracking
 model Search {
   id             String       @id @default(cuid())
   conversationId String?
@@ -112,7 +88,7 @@ model Search {
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   query          String
-  results        Json
+  results        String
   createdAt      DateTime     @default(now())
 
   @@index([userId])
@@ -125,7 +101,7 @@ model Citation {
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   title     String
   url       String
-  snippet   String   @db.Text
+  snippet   String
   order     Int
   createdAt DateTime @default(now())
 
@@ -139,9 +115,9 @@ model SavedPrompt {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   description String?
-  prompt      String   @db.Text
+  prompt      String
   category    String?
-  tags        String[]
+  tags        String   // comma-separated tags
   isPublic    Boolean  @default(false)
   usageCount  Int      @default(0)
   createdAt   DateTime @default(now())
