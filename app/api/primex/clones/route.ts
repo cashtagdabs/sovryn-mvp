@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
 
 const PRIMEX_API_URL = process.env.PRIMEX_API_URL || 'http://localhost:8000';
 

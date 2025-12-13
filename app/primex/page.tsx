@@ -1,4 +1,5 @@
-import { auth } from '@clerk/nextjs';
+import { auth } from '@clerk/nextjs/server';
+export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import PrimexCloneSelector from '../components/primex/PrimexCloneSelector';
 import ModeSwitcher from '../components/ModeSwitcher';

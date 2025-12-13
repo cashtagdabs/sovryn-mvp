@@ -1,4 +1,5 @@
 import { auth } from '@clerk/nextjs/server';
+export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { SubscriptionContent } from './SubscriptionContent';
 
