@@ -25,6 +25,7 @@
     "framer-motion": "^12.23.24",
     "groq-sdk": "^0.34.0",
     "lucide-react": "^0.553.0",
+    "nanoid": "^5.1.6",
     "next": "14.2.25",
     "openai": "^6.8.1",
     "prisma": "^5.19.1",

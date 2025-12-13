@@ -2,6 +2,53 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma, getOrCreateUser } from '@/app/lib/db';
 
+// POST - Create a new conversation
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { title, firstMessage } = body;
+
+    // Get or create user
+    const user = await getOrCreateUser(userId);
+
+    // Create conversation
+    const conversation = await prisma.conversation.create({
+      data: {
+        userId: user.id,
+        title: title || 'New Conversation',
+        model: 'PRIMEX',
+      },
+    });
+
+    // Add first message if provided
+    if (firstMessage) {
+      await prisma.message.create({
+        data: {
+          conversationId: conversation.id,
+          userId: user.id,
+          role: 'user',
+          content: firstMessage,
+          model: 'PRIMEX',
+        },
+      });
+    }
+
+    return NextResponse.json({ conversation });
+  } catch (error: any) {
+    console.error('Create conversation error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+// GET - List all conversations
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();

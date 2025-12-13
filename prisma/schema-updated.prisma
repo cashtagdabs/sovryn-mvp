@@ -2,33 +2,45 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Uncomment ONE datasource block below based on your environment
+
+// For local development (SQLite):
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// User model with social features
+// For production (PostgreSQL):
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+
+// User model integrated with Clerk and PRIMEX
 model User {
-  id              String         @id @default(cuid())
-  clerkId         String         @unique
-  email           String         @unique
-  name            String?
-  username        String?        @unique
-  bio             String?
-  avatarUrl       String?
-  website         String?
-  twitter         String?
-  github          String?
+  id                 String         @id @default(cuid())
+  clerkId            String         @unique
+  email              String         @unique
+  name               String?
+  avatarUrl          String?
   
-  subscription    Subscription?
-  conversations   Conversation[]
-  messages        Message[]
-  searches        Search[]
-  savedPrompts    SavedPrompt[]
-  likedConversations ConversationLike[]
+  // PRIMEX Sovereign Access
+  sovereignAccess    Boolean        @default(false)
+  primexUsageCount   Int            @default(0)
+  lastPrimexAccess   DateTime?
   
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  subscription       Subscription?
+  conversations      Conversation[]
+  messages           Message[]
+  searches           Search[]
+  savedPrompts       SavedPrompt[]
+  primexInvocations  PrimexInvocation[]
+  
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  
+  @@index([sovereignAccess])
 }
 
 // Subscription management
@@ -46,45 +58,20 @@ model Subscription {
   updatedAt              DateTime @updatedAt
 }
 
-// Conversation with sharing features
 model Conversation {
   id          String     @id @default(cuid())
   userId      String
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
-  model       String     @default("PRIMEX")
-  
-  // Social features
-  isPublic    Boolean    @default(false)
-  shareId     String?    @unique
-  viewCount   Int        @default(0)
-  likeCount   Int        @default(0)
-  
+  model       String     @default("GPT4")
   messages    Message[]
   searches    Search[]
-  likes       ConversationLike[]
-  
   isArchived  Boolean    @default(false)
   isPinned    Boolean    @default(false)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
   @@index([userId])
-  @@index([isPublic])
-  @@index([shareId])
-}
-
-// Conversation likes
-model ConversationLike {
-  id             String       @id @default(cuid())
-  userId         String
-  conversationId String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-
-  @@unique([userId, conversationId])
-  @@index([conversationId])
 }
 
 // Message history
@@ -105,14 +92,14 @@ model Message {
 }
 
 model Search {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   conversationId String?
   conversation   Conversation? @relation(fields: [conversationId], references: [id])
   userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   query          String
   results        String
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime      @default(now())
 
   @@index([userId])
 }
@@ -131,7 +118,7 @@ model Citation {
   @@index([messageId])
 }
 
-// Saved prompts library (enhanced for marketplace)
+// Saved prompts library
 model SavedPrompt {
   id          String   @id @default(cuid())
   userId      String
@@ -143,10 +130,28 @@ model SavedPrompt {
   tags        String   // comma-separated tags
   isPublic    Boolean  @default(false)
   usageCount  Int      @default(0)
-  likeCount   Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([isPublic])
+}
+
+// PRIMEX Clone Invocation History
+model PrimexInvocation {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clone       String   // ARCHITECT, CORTEX, etc.
+  message     String
+  response    String
+  model       String
+  temperature Float
+  tokenCount  Int?
+  duration    Int?     // milliseconds
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([clone])
+  @@index([createdAt])
 }

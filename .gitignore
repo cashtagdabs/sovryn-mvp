@@ -64,3 +64,6 @@ Thumbs.db
 
 # clerk configuration (can include secrets)
 /.clerk/
+.cache/
+.local/
+*.log
