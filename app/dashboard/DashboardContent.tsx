@@ -46,6 +46,8 @@ import {
   EngagementSummary,
   LevelingWidget,
 } from '@/app/components/widgets/Analytics';
+import { SearchModal } from '@/app/components/SearchModal';
+import { NotificationsDropdown } from '@/app/components/NotificationsDropdown';
 
 export function DashboardContent() {
   const { user } = useUser();
@@ -55,6 +57,7 @@ export function DashboardContent() {
   // ========================================================================
   const [theme, setTheme] = useState<'dark' | 'light' | 'gradient' | 'glass' | 'custom'>('gradient');
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+  const [showSearch, setShowSearch] = useState<boolean>(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -174,7 +177,7 @@ export function DashboardContent() {
           {/* Search & Command Palette */}
           <div className="flex-1 max-w-md mx-4">
             <div
-              onClick={() => {}}
+              onClick={() => setShowSearch(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 border border-white/20 cursor-pointer hover:border-white/40 transition-colors"
             >
               <Search className="w-4 h-4 text-white/60" />
@@ -185,13 +188,16 @@ export function DashboardContent() {
           {/* Right Navigation */}
           <div className="flex items-center gap-4">
             {/* Notifications */}
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <Bell className="w-5 h-5 text-white/70" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <Bell className="w-5 h-5 text-white/70" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              </button>
+              <NotificationsDropdown isOpen={showNotifications} onClose={() => setShowNotifications(false)} />
+            </div>
 
             {/* Theme Switcher */}
             <div className="flex gap-1 border-l border-white/10 pl-4">
@@ -473,6 +479,9 @@ export function DashboardContent() {
           </footer>
         </div>
       </div>
+
+      {/* Modals */}
+      <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
     </div>
   );
 }
