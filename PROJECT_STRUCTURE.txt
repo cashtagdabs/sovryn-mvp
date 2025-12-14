@@ -1,0 +1,131 @@
+./
+├── DEPLOYMENT_GUIDE.md
+├── DEPLOY_NOW.md*
+├── DEPLOY_NOW.md alias*
+├── FINAL_DEPLOYMENT_CHECKLIST.md
+├── FIRST_30_DAYS.md.json*
+├── FIRST_30_DAYS.md.json alias*
+├── INTEGRATION_TEST_CHECKLIST.md
+├── LAUNCH_GUIDE.md
+├── MARKETING_LAUNCH.md*
+├── MARKETING_LAUNCH.md alias*
+├── NEXT_STEPS.md
+├── PRIMEX_MASTER_BOOT_PROMPT.txt*
+├── PROJECT_STRUCTURE.txt
+├── PROJECT_SUMMARY.md
+├── Primex Ai Mastery Doctrine V1.pdf*
+├── Primex Ai — Professional Build Plan & Monorepo Scaffold V1.pdf*
+├── Primex Launch Plan.pdf*
+├── Primex Sovreign — V1-2.pdf*
+├── QUICKSTART.md
+├── README.md
+├── TESTING_CHECKLIST.md
+├── app/
+│   ├── api/
+│   │   ├── admin/
+│   │   ├── chat/
+│   │   ├── conversations/
+│   │   ├── primex/
+│   │   ├── subscriptions/
+│   │   ├── user/
+│   │   └── webhooks/
+│   ├── chat/
+│   │   ├── [id]/
+│   │   ├── layout.tsx*
+│   │   └── page.tsx*
+│   ├── components/
+│   │   ├── ModeSwitcher.tsx
+│   │   ├── PerformanceMonitor.tsx*
+│   │   ├── SovrynLogo.tsx
+│   │   ├── ThemeProvider.tsx
+│   │   ├── chat/
+│   │   ├── primex/
+│   │   └── widgets/
+│   ├── dashboard/
+│   │   ├── DashboardContent.tsx
+│   │   └── page.tsx*
+│   ├── favicon.ico*
+│   ├── globals.css*
+│   ├── hooks/
+│   │   └── useChat.ts*
+│   ├── layout.tsx*
+│   ├── lib/
+│   │   ├── ai/
+│   │   ├── auth.ts
+│   │   ├── db.ts*
+│   │   ├── stripe.server.ts
+│   │   ├── stripe.ts*
+│   │   ├── theme.ts
+│   │   ├── usage.ts*
+│   │   └── utils.ts*
+│   ├── page.tsx*
+│   ├── primex/
+│   │   └── page.tsx
+│   ├── sign-in/
+│   │   └── [[...sign-in]]/
+│   ├── sign-up/
+│   │   └── [[...sign-up]]/
+│   └── subscription/
+│       ├── SubscriptionContent.tsx*
+│       └── page.tsx*
+├── audit_backups/
+│   ├── DEPLOY_NOW.md*
+│   ├── DEPLOY_NOW.md alias*
+│   ├── app-build-manifest.json*
+│   ├── app-paths-manifest.json*
+│   ├── build-manifest.json*
+│   ├── middleware-manifest.json*
+│   ├── next-devtools-config.json*
+│   ├── next-font-manifest.json*
+│   ├── package-lock.json*
+│   ├── package.json*
+│   ├── pages-manifest.json*
+│   ├── prerender-manifest.json*
+│   ├── react-loadable-manifest.json*
+│   ├── routes-manifest.json*
+│   ├── server-reference-manifest.json*
+│   ├── tsconfig.json*
+│   └── vercel.json*
+├── audit_missing.csv*
+├── eslint.config.mjs*
+├── files_missing_latest_specs.txt*
+├── middleware.ts*
+├── next.config.mjs
+├── next.config.ts*
+├── package-lock.json
+├── package.json*
+├── postcss.config.mjs*
+├── primex-backend/
+│   ├── config/
+│   │   ├── clones/
+│   │   └── loyalty-core.json
+│   ├── ollama/
+│   │   └── clone-prompts/
+│   ├── requirements.txt
+│   ├── scripts/
+│   │   └── setup-ollama.sh*
+│   └── services/
+│       └── clone-orchestrator.py
+├── prisma/
+│   ├── migrations/
+│   │   ├── 20251203072944_init_sqlite/
+│   │   ├── add_primex_fields/
+│   │   └── migration_lock.toml
+│   ├── prisma:schema.prisma
+│   ├── schema-updated.prisma
+│   ├── schema.prisma
+│   └── seed.ts*
+├── prisma.config.ts.bak
+├── prisma:schema.prisma
+├── scripts/
+│   ├── create_dev_user.js
+│   ├── create_test_user.js
+│   ├── setup-database.sh*
+│   ├── start-local.sh*
+│   └── test_prisma.js
+├── sovereign_fingerprint.env*
+├── sovryn-mvp.code-workspace*
+├── tsconfig.json*
+└── vercel.json*
+
+38 directories, 90 files

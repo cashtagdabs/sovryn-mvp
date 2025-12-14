@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import Link from 'next/link';
 
 // ============================================================================
 // CARD WIDGET - Base container for all dashboard cards
@@ -149,7 +150,7 @@ export function ActionCard({
   };
 
   return (
-    <a href={href} className="group">
+    <Link href={href} className="group">
       <Card
         variant="default"
         hoverable
@@ -163,7 +164,7 @@ export function ActionCard({
         </div>
         <p className="text-sm text-white/70 leading-relaxed">{description}</p>
       </Card>
-    </a>
+    </Link>
   );
 }
 

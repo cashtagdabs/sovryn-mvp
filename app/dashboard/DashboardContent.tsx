@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { SovrynLogo } from '@/app/components/SovrynLogo';
 import { useUser } from '@clerk/nextjs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   StatWidget,
@@ -55,6 +55,20 @@ export function DashboardContent() {
   // ========================================================================
   const [theme, setTheme] = useState<'dark' | 'light' | 'gradient' | 'glass' | 'custom'>('gradient');
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('sovryn-theme') as typeof theme | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
+  // Save theme to localStorage when it changes
+  const handleThemeChange = (newTheme: typeof theme) => {
+    setTheme(newTheme);
+    localStorage.setItem('sovryn-theme', newTheme);
+  };
 
   // ========================================================================
   // User Data & Metrics
@@ -184,7 +198,7 @@ export function DashboardContent() {
               {(['dark', 'light', 'gradient', 'glass'] as const).map((t) => (
                 <button
                   key={t}
-                  onClick={() => setTheme(t)}
+                  onClick={() => handleThemeChange(t)}
                   className={`px-2 py-1 rounded text-xs font-semibold transition-all ${
                     theme === t
                       ? 'bg-purple-600/80 text-white shadow-lg'
@@ -197,9 +211,11 @@ export function DashboardContent() {
             </div>
 
             {/* Settings */}
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-colors border-l border-white/10 pl-4">
-              <Settings className="w-5 h-5 text-white/70" />
-            </button>
+            <Link href="/settings">
+              <button className="p-2 hover:bg-white/10 rounded-lg transition-colors border-l border-white/10 pl-4">
+                <Settings className="w-5 h-5 text-white/70" />
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -258,8 +274,12 @@ export function DashboardContent() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="primary">Quick Start</Button>
-              <Button variant="secondary">Profile</Button>
+              <Link href="/chat">
+                <Button variant="primary">Quick Start</Button>
+              </Link>
+              <Link href="/settings">
+                <Button variant="secondary">Profile</Button>
+              </Link>
             </div>
           </Card>
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
