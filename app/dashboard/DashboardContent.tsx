@@ -48,6 +48,7 @@ import {
 } from '@/app/components/widgets/Analytics';
 import { SearchModal } from '@/app/components/SearchModal';
 import { NotificationsDropdown } from '@/app/components/NotificationsDropdown';
+import { InviteModal } from '@/app/components/InviteModal';
 
 export function DashboardContent() {
   const { user } = useUser();
@@ -58,6 +59,7 @@ export function DashboardContent() {
   const [theme, setTheme] = useState<'dark' | 'light' | 'gradient' | 'glass' | 'custom'>('gradient');
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [showInvite, setShowInvite] = useState<boolean>(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -419,7 +421,7 @@ export function DashboardContent() {
                 <p className="text-sm text-white/70">
                   Collaborate in real-time with instant presence indicators and unified comments.
                 </p>
-                <Button variant="secondary" size="sm">
+                <Button variant="secondary" size="sm" onClick={() => setShowInvite(true)}>
                   Invite Members
                 </Button>
               </div>
@@ -428,9 +430,11 @@ export function DashboardContent() {
                 <p className="text-sm text-white/70">
                   Show off your accomplishments and unlock referral rewards.
                 </p>
-                <Button variant="secondary" size="sm">
-                  View Leaderboards
-                </Button>
+                <Link href="/leaderboard">
+                  <Button variant="secondary" size="sm">
+                    View Leaderboards
+                  </Button>
+                </Link>
               </div>
             </div>
           </Card>
@@ -482,6 +486,7 @@ export function DashboardContent() {
 
       {/* Modals */}
       <SearchModal isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      <InviteModal isOpen={showInvite} onClose={() => setShowInvite(false)} />
     </div>
   );
 }

@@ -6,7 +6,6 @@ export interface AIProvider {
   id: string;
   name: string;
   models: AIModel[];
-  featured?: boolean;
 }
 
 export interface AIModel {
@@ -17,53 +16,9 @@ export interface AIModel {
   maxTokens: number;
   inputCost: number; // per 1M tokens
   outputCost: number; // per 1M tokens
-  badge?: 'BEST' | 'FASTEST' | 'CHEAPEST' | 'SMART' | 'RECOMMENDED';
-  description?: string;
 }
 
 export const AI_PROVIDERS: AIProvider[] = [
-  // PRIMEX - Featured first as the primary/best option
-  {
-    id: 'primex',
-    name: 'PRIMEX',
-    featured: true,
-    models: [
-      {
-        id: 'primex-ultra',
-        name: 'PRIMEX Ultra',
-        provider: 'primex',
-        contextWindow: 128000,
-        maxTokens: 8192,
-        inputCost: 0, // Self-hosted = free
-        outputCost: 0,
-        badge: 'BEST',
-        description: 'Our flagship model - fastest, most accurate, 100% private',
-      },
-      {
-        id: 'primex-architect',
-        name: 'PRIMEX Architect',
-        provider: 'primex',
-        contextWindow: 32000,
-        maxTokens: 4096,
-        inputCost: 0,
-        outputCost: 0,
-        badge: 'FASTEST',
-        description: 'Optimized for code generation and technical tasks',
-      },
-      {
-        id: 'primex-cortex',
-        name: 'PRIMEX Cortex',
-        provider: 'primex',
-        contextWindow: 32000,
-        maxTokens: 4096,
-        inputCost: 0,
-        outputCost: 0,
-        badge: 'SMART',
-        description: 'Strategic analysis and complex reasoning',
-      },
-    ],
-  },
-  // Other providers
   {
     id: 'openai',
     name: 'OpenAI',
@@ -94,7 +49,6 @@ export const AI_PROVIDERS: AIProvider[] = [
         maxTokens: 4096,
         inputCost: 0.5,
         outputCost: 1.5,
-        badge: 'CHEAPEST',
       },
     ],
   },
@@ -152,9 +106,24 @@ export const AI_PROVIDERS: AIProvider[] = [
         maxTokens: 4096,
         inputCost: 0.7,
         outputCost: 0.8,
-      },
+      }
     ],
   },
+  {
+    id: 'ollama',
+    name: 'Ollama',
+    models: [
+      {
+        id: 'llama2-7b-uncensored:q4_0',
+        name: 'Llama 2 7B Uncensored (Ollama)',
+        provider: 'ollama',
+        contextWindow: 4096,
+        maxTokens: 2048,
+        inputCost: 0,
+        outputCost: 0,
+      }
+    ],
+  }
 ];
 
 export const getModelById = (modelId: string): AIModel | undefined => {
@@ -173,6 +142,9 @@ export const getProviderById = (providerId: string): AIProvider | undefined => {
 let openaiClient: OpenAI | null = null;
 let anthropicClient: Anthropic | null = null;
 let groqClient: Groq | null = null;
+
+// Optionally add an Ollama client if you have a local JS SDK, for now just include this for uniformity
+// let ollamaClient: any | null = null;
 
 export const getOpenAIClient = () => {
   if (!openaiClient && process.env.OPENAI_API_KEY) {
@@ -201,20 +173,5 @@ export const getGroqClient = () => {
   return groqClient;
 };
 
-// PRIMEX client - connects to local backend
-export const getPrimexClient = () => {
-  const baseURL = process.env.PRIMEX_BACKEND_URL || 'http://localhost:8000';
-  return {
-    chat: async (messages: Array<{ role: string; content: string }>, model: string = 'llama3.2:1b') => {
-      const response = await fetch(`${baseURL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, model }),
-      });
-      if (!response.ok) {
-        throw new Error(`PRIMEX API error: ${response.statusText}`);
-      }
-      return response.json();
-    },
-  };
-};
+// Placeholder for local ollama client pattern if you add a library
+// export const getOllamaClient = () => { ... };
