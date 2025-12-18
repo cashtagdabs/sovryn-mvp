@@ -40,6 +40,18 @@ next-env.d.ts
 
 # prisma
 prisma/generated/
+prisma/dev.db
+prisma/prisma/
+
+# python virtualenv
+primex-backend/venv/
+
+# sqlite/db artifacts
+*.db
+*.db-journal
+
+# local tooling
+.continue/
 
 # logs
 *.log
