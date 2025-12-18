@@ -1,0 +1,34 @@
+{
+	"folders": [
+		{
+			"path": "../../../.git"
+		},
+		{
+			"path": "../../../.github"
+		},
+		{
+			"path": "../../../.next"
+		},
+		{
+			"path": "../../../.vscode"
+		},
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../audit_backups"
+		},
+		{
+			"path": "../../../clone_backups"
+		},
+		{
+			"path": "../../../node_modules"
+		},
+		{
+			"path": "../../../prisma"
+		},
+		{
+			"path": "../../../untitled folder"
+		}
+	]
+}
