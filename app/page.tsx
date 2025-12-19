@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useUser } from '@clerk/nextjs';
+import { useUser } from './hooks/useClerkUser';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { DashboardContent } from './dashboard/DashboardContent';

@@ -5,7 +5,7 @@ const PRIMEX_API_URL = process.env.PRIMEX_API_URL || 'http://localhost:8000';
 
 export async function GET(req: NextRequest) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json(

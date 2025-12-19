@@ -1,6 +1,13 @@
 // Client-safe Stripe utilities - NO server secrets
 // Server-only Stripe operations are in stripe.server.ts
 
+import Stripe from 'stripe';
+
+// Initialize Stripe with server secret (only use in server-side code)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+  apiVersion: '2025-10-29.clover',
+});
+
 const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
 if (!STRIPE_PUBLISHABLE_KEY) {

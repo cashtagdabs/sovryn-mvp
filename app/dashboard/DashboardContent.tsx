@@ -30,7 +30,7 @@ import {
   Trophy,
 } from 'lucide-react';
 import { SovrynLogo } from '@/app/components/SovrynLogo';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '../hooks/useClerkUser';
 import { useState, useEffect } from 'react';
 import {
   Card,

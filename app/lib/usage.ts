@@ -99,7 +99,7 @@ export async function getMonthlyUsageHistory(userId: string, months: number = 6)
   // Group by month
   const monthlyStats: Record<string, { messages: number; tokens: number }> = {};
 
-  messages.forEach((message) => {
+  messages.forEach((message: { createdAt: Date; tokenCount: number | null }) => {
     const monthKey = message.createdAt.toISOString().slice(0, 7); // YYYY-MM
     if (!monthlyStats[monthKey]) {
       monthlyStats[monthKey] = { messages: 0, tokens: 0 };

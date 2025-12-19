@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { prisma, getOrCreateUser } from '@/app/lib/db';
 
 // POST - Create a new conversation
@@ -14,7 +14,12 @@ export async function POST(req: NextRequest) {
     const { title, firstMessage } = body;
 
     // Get or create user
-    const user = await getOrCreateUser(userId);
+    const clerkUser = await (await clerkClient()).users.getUser(userId);
+    const email = clerkUser.emailAddresses[0]?.emailAddress || 'unknown@example.com';
+    const name = clerkUser.firstName && clerkUser.lastName 
+      ? `${clerkUser.firstName} ${clerkUser.lastName}` 
+      : clerkUser.username || undefined;
+    const user = await getOrCreateUser(userId, email, name);
 
     // Create conversation
     const conversation = await prisma.conversation.create({

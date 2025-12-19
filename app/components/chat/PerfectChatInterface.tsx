@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '../../hooks/useClerkUser';
 import Link from 'next/link';
 
 interface Message {

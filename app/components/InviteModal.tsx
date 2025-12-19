@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Copy, Check, Mail, MessageCircle, Share2, Gift } from 'lucide-react';
-import { useUser } from '@clerk/nextjs';
+import { useUser } from '../hooks/useClerkUser';
 
 interface InviteModalProps {
   isOpen: boolean;
