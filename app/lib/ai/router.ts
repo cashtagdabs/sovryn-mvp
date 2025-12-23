@@ -1,7 +1,9 @@
 import { getOpenAIClient, getAnthropicClient, getGroqClient, getModelById } from './providers';
+import { resolveFallbackModel, healthManager } from './fallback';
 import { Message } from '@prisma/client';
 
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'https://magnolia-nonperjured-lani.ngrok-free.dev';
+const PRIMEX_BACKEND_URL = process.env.PRIMEX_BACKEND_URL || 'http://localhost:8000';
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
@@ -26,51 +28,140 @@ export interface ChatCompletionResponse {
     completionTokens?: number;
     totalTokens?: number;
   };
+  fallback?: boolean; // Indicates fallback was used
 }
 
 export class AIRouter {
   async chat(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
-    const model = getModelById(options.modelId);
+    let model = getModelById(options.modelId);
     if (!model) {
       throw new Error(`Model ${options.modelId} not found`);
     }
 
-    const provider = model.provider;
+    let provider = model.provider;
+    let actualModelId = options.modelId;
+    let usedFallback = false;
 
+    // Try primary provider first
+    try {
+      return await this.executeChat(provider, actualModelId, options);
+    } catch (error) {
+      console.warn(
+        `[Router] Primary provider ${provider} failed for ${options.modelId}: ${error instanceof Error ? error.message : 'unknown error'}`
+      );
+
+      // Invalidate health cache for this provider
+      healthManager.invalidateCache(provider);
+
+      // Attempt fallback if primary is PRIMEX
+      if (provider === 'primex' || provider === 'ollama') {
+        console.log(`[Router] Attempting fallback for ${options.modelId}`);
+        const fallbackModelId = await resolveFallbackModel(actualModelId);
+
+        if (fallbackModelId) {
+          const fallbackModel = getModelById(fallbackModelId);
+          if (fallbackModel) {
+            try {
+              const result = await this.executeChat(fallbackModel.provider, fallbackModelId, options);
+              result.fallback = true;
+              return result;
+            } catch (fallbackError) {
+              console.error(
+                `[Router] Fallback also failed: ${fallbackError instanceof Error ? fallbackError.message : 'unknown error'}`
+              );
+            }
+          }
+        }
+      }
+
+      // Re-throw original error if all attempts failed
+      throw error;
+    }
+  }
+
+  async *chatStream(options: ChatCompletionOptions): AsyncGenerator<string> {
+    let model = getModelById(options.modelId);
+    if (!model) {
+      throw new Error(`Model ${options.modelId} not found`);
+    }
+
+    let provider = model.provider;
+    let actualModelId = options.modelId;
+
+    // Try primary provider first
+    try {
+      yield* this.executeStreamChat(provider, actualModelId, options);
+    } catch (error) {
+      console.warn(
+        `[Router] Primary provider ${provider} failed for ${options.modelId}: ${error instanceof Error ? error.message : 'unknown error'}`
+      );
+
+      healthManager.invalidateCache(provider);
+
+      // Attempt fallback if primary is PRIMEX
+      if (provider === 'primex' || provider === 'ollama') {
+        const fallbackModelId = await resolveFallbackModel(actualModelId);
+
+        if (fallbackModelId) {
+          const fallbackModel = getModelById(fallbackModelId);
+          if (fallbackModel) {
+            try {
+              yield* this.executeStreamChat(fallbackModel.provider, fallbackModelId, options);
+              return; // Success
+            } catch (fallbackError) {
+              console.error(
+                `[Router] Fallback stream also failed: ${fallbackError instanceof Error ? fallbackError.message : 'unknown error'}`
+              );
+            }
+          }
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  private async executeChat(
+    provider: string,
+    modelId: string,
+    options: ChatCompletionOptions
+  ): Promise<ChatCompletionResponse> {
     switch (provider) {
       case 'openai':
-        return this.chatWithOpenAI(options);
+        return this.chatWithOpenAI({ ...options, modelId });
       case 'anthropic':
-        return this.chatWithAnthropic(options);
+        return this.chatWithAnthropic({ ...options, modelId });
       case 'groq':
-        return this.chatWithGroq(options);
+        return this.chatWithGroq({ ...options, modelId });
+      case 'primex':
+        return this.chatWithPrimex({ ...options, modelId });
       case 'ollama':
-        return this.chatWithOllama(options);
+        return this.chatWithOllama({ ...options, modelId });
       default:
         throw new Error(`Provider ${provider} not supported`);
     }
   }
 
-  async *chatStream(options: ChatCompletionOptions): AsyncGenerator<string> {
-    const model = getModelById(options.modelId);
-    if (!model) {
-      throw new Error(`Model ${options.modelId} not found`);
-    }
-
-    const provider = model.provider;
-
+  private async *executeStreamChat(
+    provider: string,
+    modelId: string,
+    options: ChatCompletionOptions
+  ): AsyncGenerator<string> {
     switch (provider) {
       case 'openai':
-        yield* this.chatStreamOpenAI(options);
+        yield* this.chatStreamOpenAI({ ...options, modelId });
         break;
       case 'anthropic':
-        yield* this.chatStreamAnthropic(options);
+        yield* this.chatStreamAnthropic({ ...options, modelId });
         break;
       case 'groq':
-        yield* this.chatStreamGroq(options);
+        yield* this.chatStreamGroq({ ...options, modelId });
+        break;
+      case 'primex':
+        yield* this.chatStreamPrimex({ ...options, modelId });
         break;
       case 'ollama':
-        yield* this.chatStreamOllama(options);
+        yield* this.chatStreamOllama({ ...options, modelId });
         break;
       default:
         throw new Error(`Provider ${provider} not supported`);
@@ -131,7 +222,6 @@ export class AIRouter {
       throw new Error('Anthropic client not initialized');
     }
 
-    // Convert messages to Anthropic format
     const systemMessage = options.messages.find((m) => m.role === 'system');
     const messages = options.messages
       .filter((m) => m.role !== 'system')
@@ -234,6 +324,44 @@ export class AIRouter {
       if (content) {
         yield content;
       }
+    }
+  }
+
+  private async chatWithPrimex(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
+    const response = await fetch(`${PRIMEX_BACKEND_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: options.modelId,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`PRIMEX request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      content: data?.content || data?.response || '',
+      model: options.modelId,
+      usage: data?.usage
+        ? {
+            promptTokens: data.usage.prompt_tokens,
+            completionTokens: data.usage.completion_tokens,
+            totalTokens: data.usage.total_tokens,
+          }
+        : undefined,
+    };
+  }
+
+  private async *chatStreamPrimex(options: ChatCompletionOptions): AsyncGenerator<string> {
+    const completion = await this.chatWithPrimex(options);
+    if (completion.content) {
+      yield completion.content;
     }
   }
 
