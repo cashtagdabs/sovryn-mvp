@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Get AI response via router (includes Ollama/local models)
+    // Get AI response via router (includes fallback logic)
     const response = await aiRouter.chat({
       modelId: validatedData.modelId,
       messages: validatedData.messages,
@@ -99,6 +99,12 @@ export async function POST(req: NextRequest) {
       conversationId: conversation.id,
     });
 
+    // Log if fallback was used
+    if (response.fallback) {
+      console.info(
+        `[Chat] Fallback used for user ${user.id}: ${validatedData.modelId} -> ${response.model}`
+      );
+    }
 
     // Save assistant message
     const assistantMessage = await prisma.message.create({
@@ -107,21 +113,25 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         role: 'ASSISTANT',
         content: response.content,
-        model: validatedData.modelId as any,
+        model: response.model as any, // Use actual model that responded
         tokenCount: response.usage?.totalTokens,
       },
     });
 
-    return NextResponse.json({
-      conversationId: conversation.id,
-      message: {
-        id: assistantMessage.id,
-        content: response.content,
-        role: 'assistant',
-        model: response.model,
-        usage: response.usage,
+    return NextResponse.json(
+      {
+        conversationId: conversation.id,
+        message: {
+          id: assistantMessage.id,
+          content: response.content,
+          role: 'assistant',
+          model: response.model,
+          usage: response.usage,
+          fallback: response.fallback, // Include fallback flag for client
+        },
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Chat API error:', error);
 
@@ -132,9 +142,25 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Surface more detailed error info so the client can show what went wrong
+    // Surface detailed error info
     const message =
       error instanceof Error ? error.message : 'Unknown error occurred in chat handler';
+
+    // Check if error is due to no available providers
+    if (
+      message.includes('No healthy fallback') ||
+      message.includes('Provider') ||
+      message.includes('not initialized')
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Service temporarily unavailable',
+          details: message,
+          retryable: true,
+        },
+        { status: 503 }
+      );
+    }
 
     return NextResponse.json(
       {
