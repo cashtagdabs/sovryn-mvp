@@ -21,9 +21,10 @@ interface ProviderFallbackMap {
 // Model cloning map: PRIMEX models -> fallback providers
 const MODEL_FALLBACK_MAP: ProviderFallbackMap = {
   // PRIMEX models clone to these fallbacks in order of preference
-  'primex-ultra': ['openai:gpt-4-turbo-preview', 'groq:mixtral-8x7b-32768', 'anthropic:claude-3-sonnet-20240229'],
-  'primex-architect': ['openai:gpt-4', 'groq:mixtral-8x7b-32768', 'anthropic:claude-3-haiku-20240307'],
-  'primex-cortex': ['openai:gpt-4-turbo-preview', 'anthropic:claude-3-sonnet-20240229', 'groq:mixtral-8x7b-32768'],
+  // Using gpt-3.5-turbo first as it's available to all OpenAI accounts
+  'primex-ultra': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-sonnet-20240229'],
+  'primex-architect': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-haiku-20240307'],
+  'primex-cortex': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-sonnet-20240229'],
 };
 
 class ProviderHealthManager {
@@ -120,7 +121,7 @@ export async function resolveFallbackModel(
   // Iterate through fallback chain
   for (const fallbackId of fallbacks) {
     const [provider] = fallbackId.split(':');
-    
+
     // Skip forbidden providers
     if (forbiddenProviders.includes(provider)) {
       continue;
