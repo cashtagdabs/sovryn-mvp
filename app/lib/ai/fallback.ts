@@ -21,10 +21,10 @@ interface ProviderFallbackMap {
 // Model cloning map: PRIMEX models -> fallback providers
 const MODEL_FALLBACK_MAP: ProviderFallbackMap = {
   // PRIMEX models clone to these fallbacks in order of preference
-  // Using gpt-3.5-turbo first as it's available to all OpenAI accounts
-  'primex-ultra': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-sonnet-20240229'],
-  'primex-architect': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-haiku-20240307'],
-  'primex-cortex': ['groq:mixtral-8x7b-32768', 'openai:gpt-3.5-turbo', 'anthropic:claude-3-sonnet-20240229'],
+  // Using current Groq models (Dec 2025) - mixtral and llama2 were decommissioned
+  'primex-ultra': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant'],
+  'primex-architect': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant'],
+  'primex-cortex': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant'],
 };
 
 class ProviderHealthManager {

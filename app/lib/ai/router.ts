@@ -114,7 +114,7 @@ export class AIRouter {
         for (const fallbackId of fallbackChain) {
           const [fallbackProvider, fallbackModelId] = fallbackId.split(':');
           const fallbackModel = getModelById(fallbackModelId);
-          
+
           if (!fallbackModel) {
             console.warn(`[Router] Fallback model not found: ${fallbackModelId}`);
             continue;
