@@ -114,11 +114,19 @@ export async function POST(req: NextRequest) {
               );
             }
           } catch (streamError) {
-            console.error('Stream error, using fallback:', streamError);
-            const mockResponse = `Demo response. Configure AI provider keys in .env.local to enable real responses.`;
-            fullContent = mockResponse;
+            const errorMsg = streamError instanceof Error ? streamError.message : String(streamError);
+            console.error('[Stream] AI provider error:', errorMsg);
+            console.error('[Stream] Full error:', JSON.stringify(streamError, Object.getOwnPropertyNames(streamError)));
+            console.error('[Stream] Model requested:', validatedData.modelId);
+            console.error('[Stream] OPENAI_API_KEY set:', !!process.env.OPENAI_API_KEY);
+            console.error('[Stream] GROQ_API_KEY set:', !!process.env.GROQ_API_KEY);
+            console.error('[Stream] ANTHROPIC_API_KEY set:', !!process.env.ANTHROPIC_API_KEY);
+
+            // Return actual error message instead of generic demo response
+            const fallbackMessage = `AI Error: ${errorMsg}. Please try again or contact support.`;
+            fullContent = fallbackMessage;
             controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: 'content', content: mockResponse })}\n\n`)
+              encoder.encode(`data: ${JSON.stringify({ type: 'content', content: fallbackMessage })}\n\n`)
             );
           }
 
