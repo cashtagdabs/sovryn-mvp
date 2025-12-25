@@ -29,11 +29,17 @@ export const SUBSCRIPTION_PLANS = {
     maxMessages: 100,
     features: [
       '100 messages per month',
+      'PRIMEX Ultra AI',
       'GPT-3.5 Turbo',
       'Basic support',
       'Conversation history'
     ],
-    models: ['gpt-3.5-turbo'],
+    models: [
+      'gpt-3.5-turbo',
+      'primex-ultra',
+      'primex-architect',
+      'primex-cortex',
+    ],
   },
   PRO: {
     name: 'Pro',
@@ -42,12 +48,16 @@ export const SUBSCRIPTION_PLANS = {
     maxMessages: -1, // Unlimited
     features: [
       'Unlimited messages',
+      'PRIMEX Ultra AI',
       'GPT-4, Claude 3, Groq',
       'Priority support',
       'Advanced features',
       'Export conversations'
     ],
     models: [
+      'primex-ultra',
+      'primex-architect',
+      'primex-cortex',
       'gpt-4-turbo-preview',
       'gpt-4',
       'gpt-3.5-turbo',
@@ -70,6 +80,9 @@ export const SUBSCRIPTION_PLANS = {
       'Usage analytics'
     ],
     models: [
+      'primex-ultra',
+      'primex-architect',
+      'primex-cortex',
       'gpt-4-turbo-preview',
       'gpt-4',
       'gpt-3.5-turbo',
@@ -94,6 +107,10 @@ export const SUBSCRIPTION_PLANS = {
       'Dedicated infrastructure'
     ],
     models: [
+      'primex-ultra',
+      'primex-architect',
+      'primex-cortex',
+      'primex-sovereign',
       'gpt-4-turbo-preview',
       'gpt-4',
       'gpt-3.5-turbo',
@@ -102,7 +119,6 @@ export const SUBSCRIPTION_PLANS = {
       'claude-3-haiku-20240307',
       'mixtral-8x7b-32768',
       'llama2-70b-4096',
-      'primex-sovereign',
       'llama2-7b-uncensored:q4_0',
     ],
   },
