@@ -15,11 +15,11 @@ export default async function ChatPage() {
   const hasSovereignAccess = userId === sovereignUserId;
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="p-4 border-b border-gray-800">
+    <div className="flex flex-col h-full">
+      <div className="shrink-0 p-4 border-b border-gray-800">
         <ModeSwitcher currentMode="public" hasSovereignAccess={hasSovereignAccess} />
       </div>
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0">
         <ChatInterface />
       </div>
     </div>

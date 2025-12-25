@@ -22,13 +22,13 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-gray-950 text-white">
+    <div className="flex h-full flex-col bg-gray-950 text-white">
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h1 className="text-lg font-semibold">SOVRYN AI Chat</h1>
         <ModelSelector value={modelId} onChange={setModelId} />
       </header>
 
-      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-4">
+      <main className="flex-1 overflow-y-auto space-y-4 px-4 py-4 min-h-0">
         {messages.length === 0 && (
           <p className="text-sm text-white/50">
             Start a conversation by sending a message below.
