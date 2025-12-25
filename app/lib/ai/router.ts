@@ -59,10 +59,14 @@ export class AIRouter {
         const fallbackModelId = await resolveFallbackModel(actualModelId);
 
         if (fallbackModelId) {
-          const fallbackModel = getModelById(fallbackModelId);
+          // Extract actual model ID if in format 'provider:model'
+          const actualFallbackModelId = fallbackModelId.includes(':')
+            ? fallbackModelId.split(':')[1]
+            : fallbackModelId;
+          const fallbackModel = getModelById(actualFallbackModelId);
           if (fallbackModel) {
             try {
-              const result = await this.executeChat(fallbackModel.provider, fallbackModelId, options);
+              const result = await this.executeChat(fallbackModel.provider, actualFallbackModelId, options);
               result.fallback = true;
               return result;
             } catch (fallbackError) {
@@ -103,10 +107,14 @@ export class AIRouter {
         const fallbackModelId = await resolveFallbackModel(actualModelId);
 
         if (fallbackModelId) {
-          const fallbackModel = getModelById(fallbackModelId);
+          // Extract actual model ID if in format 'provider:model'
+          const actualFallbackModelId = fallbackModelId.includes(':')
+            ? fallbackModelId.split(':')[1]
+            : fallbackModelId;
+          const fallbackModel = getModelById(actualFallbackModelId);
           if (fallbackModel) {
             try {
-              yield* this.executeStreamChat(fallbackModel.provider, fallbackModelId, options);
+              yield* this.executeStreamChat(fallbackModel.provider, actualFallbackModelId, options);
               return; // Success
             } catch (fallbackError) {
               console.error(
@@ -186,10 +194,10 @@ export class AIRouter {
       model: response.model,
       usage: response.usage
         ? {
-            promptTokens: response.usage.prompt_tokens,
-            completionTokens: response.usage.completion_tokens,
-            totalTokens: response.usage.total_tokens,
-          }
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        }
         : undefined,
     };
   }
@@ -297,10 +305,10 @@ export class AIRouter {
       model: response.model,
       usage: response.usage
         ? {
-            promptTokens: response.usage.prompt_tokens,
-            completionTokens: response.usage.completion_tokens,
-            totalTokens: response.usage.total_tokens,
-          }
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens,
+        }
         : undefined,
     };
   }
@@ -350,10 +358,10 @@ export class AIRouter {
       model: options.modelId,
       usage: data?.usage
         ? {
-            promptTokens: data.usage.prompt_tokens,
-            completionTokens: data.usage.completion_tokens,
-            totalTokens: data.usage.total_tokens,
-          }
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        }
         : undefined,
     };
   }
@@ -388,13 +396,13 @@ export class AIRouter {
       model: options.modelId,
       usage: data?.usage
         ? {
-            promptTokens: data.usage.prompt_tokens,
-            completionTokens: data.usage.completion_tokens,
-            totalTokens: data.usage.total_tokens,
-          }
+          promptTokens: data.usage.prompt_tokens,
+          completionTokens: data.usage.completion_tokens,
+          totalTokens: data.usage.total_tokens,
+        }
         : data?.usage?.total_tokens
-        ? { totalTokens: data.usage.total_tokens }
-        : undefined,
+          ? { totalTokens: data.usage.total_tokens }
+          : undefined,
     };
   }
 

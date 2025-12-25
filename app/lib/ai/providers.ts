@@ -158,8 +158,14 @@ export const AI_PROVIDERS: AIProvider[] = [
 ];
 
 export const getModelById = (modelId: string): AIModel | undefined => {
+  // Handle both formats: 'gpt-4-turbo-preview' and 'openai:gpt-4-turbo-preview'
+  let searchId = modelId;
+  if (modelId.includes(':')) {
+    searchId = modelId.split(':')[1];
+  }
+
   for (const provider of AI_PROVIDERS) {
-    const model = provider.models.find((m) => m.id === modelId);
+    const model = provider.models.find((m) => m.id === searchId);
     if (model) return model;
   }
   return undefined;
