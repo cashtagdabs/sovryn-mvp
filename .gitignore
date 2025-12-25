@@ -30,6 +30,8 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+sovereign_fingerprint.env
+app/components/chat/envlok
 
 # vercel
 .vercel
@@ -40,6 +42,18 @@ next-env.d.ts
 
 # prisma
 prisma/generated/
+prisma/dev.db
+prisma/prisma/
+
+# python virtualenv
+primex-backend/venv/
+
+# sqlite/db artifacts
+*.db
+*.db-journal
+
+# local tooling
+.continue/
 
 # logs
 *.log
@@ -54,6 +68,8 @@ logs/
 # OS
 Thumbs.db
 .DS_Store
+desktop.ini
+*.lnk
 
 # Temporary files
 *.tmp
