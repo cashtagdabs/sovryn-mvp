@@ -4,6 +4,7 @@ import "./globals.css";
 import PerformanceMonitor from "./components/PerformanceMonitor";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -66,6 +67,7 @@ export default function RootLayout({
         ) : (
           content
         )}
+        <SpeedInsights />
       </body>
     </html>
   );
