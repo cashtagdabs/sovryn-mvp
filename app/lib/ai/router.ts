@@ -1,5 +1,5 @@
 import { getOpenAIClient, getAnthropicClient, getGroqClient, getModelById } from './providers';
-import { resolveFallbackModel, healthManager } from './fallback';
+import { getFallbackChain, healthManager } from './fallback';
 import { Message } from '@prisma/client';
 
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'https://magnolia-nonperjured-lani.ngrok-free.dev';
@@ -97,39 +97,42 @@ export class AIRouter {
     // Try primary provider first
     try {
       yield* this.executeStreamChat(provider, actualModelId, options);
+      return; // Success
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'unknown error';
       console.warn(`[Router] Primary provider ${provider} failed for ${options.modelId}: ${errorMsg}`);
-
       healthManager.invalidateCache(provider);
 
-      // Attempt fallback if primary is PRIMEX or Ollama
+      // Attempt fallbacks if primary is PRIMEX or Ollama
       if (provider === 'primex' || provider === 'ollama') {
-        console.log(`[Router] Attempting fallback for ${options.modelId}`);
-        const fallbackModelId = await resolveFallbackModel(actualModelId);
-        console.log(`[Router] Resolved fallback: ${fallbackModelId}`);
+        const fallbackChain = getFallbackChain(actualModelId);
+        console.log(`[Router] Attempting fallback chain for ${options.modelId}:`, fallbackChain);
 
-        if (fallbackModelId) {
-          // Extract actual model ID if in format 'provider:model'
-          const actualFallbackModelId = fallbackModelId.includes(':')
-            ? fallbackModelId.split(':')[1]
-            : fallbackModelId;
-          const fallbackModel = getModelById(actualFallbackModelId);
-          console.log(`[Router] Fallback model lookup: ${actualFallbackModelId} -> ${fallbackModel?.provider}`);
+        const errors: string[] = [`Primary (${provider}): ${errorMsg}`];
 
-          if (fallbackModel) {
-            try {
-              console.log(`[Router] Executing fallback stream with provider: ${fallbackModel.provider}, model: ${actualFallbackModelId}`);
-              yield* this.executeStreamChat(fallbackModel.provider, actualFallbackModelId, options);
-              return; // Success
-            } catch (fallbackError) {
-              const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : 'unknown error';
-              console.error(`[Router] Fallback stream also failed: ${fallbackErrorMsg}`);
-              // Throw a more descriptive error
-              throw new Error(`Primary (${provider}): ${errorMsg}. Fallback (${fallbackModel.provider}): ${fallbackErrorMsg}`);
-            }
+        // Try each fallback in order
+        for (const fallbackId of fallbackChain) {
+          const [fallbackProvider, fallbackModelId] = fallbackId.split(':');
+          const fallbackModel = getModelById(fallbackModelId);
+          
+          if (!fallbackModel) {
+            console.warn(`[Router] Fallback model not found: ${fallbackModelId}`);
+            continue;
+          }
+
+          try {
+            console.log(`[Router] Trying fallback: ${fallbackProvider}:${fallbackModelId}`);
+            yield* this.executeStreamChat(fallbackProvider, fallbackModelId, options);
+            return; // Success!
+          } catch (fallbackError) {
+            const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : 'unknown error';
+            console.warn(`[Router] Fallback ${fallbackProvider} failed: ${fallbackErrorMsg}`);
+            errors.push(`${fallbackProvider}: ${fallbackErrorMsg}`);
           }
         }
+
+        // All fallbacks failed
+        throw new Error(errors.join(' | '));
       }
 
       throw error;
