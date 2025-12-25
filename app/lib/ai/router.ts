@@ -92,19 +92,22 @@ export class AIRouter {
     let provider = model.provider;
     let actualModelId = options.modelId;
 
+    console.log(`[Router] chatStream called for model: ${options.modelId}, provider: ${provider}`);
+
     // Try primary provider first
     try {
       yield* this.executeStreamChat(provider, actualModelId, options);
     } catch (error) {
-      console.warn(
-        `[Router] Primary provider ${provider} failed for ${options.modelId}: ${error instanceof Error ? error.message : 'unknown error'}`
-      );
+      const errorMsg = error instanceof Error ? error.message : 'unknown error';
+      console.warn(`[Router] Primary provider ${provider} failed for ${options.modelId}: ${errorMsg}`);
 
       healthManager.invalidateCache(provider);
 
-      // Attempt fallback if primary is PRIMEX
+      // Attempt fallback if primary is PRIMEX or Ollama
       if (provider === 'primex' || provider === 'ollama') {
+        console.log(`[Router] Attempting fallback for ${options.modelId}`);
         const fallbackModelId = await resolveFallbackModel(actualModelId);
+        console.log(`[Router] Resolved fallback: ${fallbackModelId}`);
 
         if (fallbackModelId) {
           // Extract actual model ID if in format 'provider:model'
@@ -112,14 +115,18 @@ export class AIRouter {
             ? fallbackModelId.split(':')[1]
             : fallbackModelId;
           const fallbackModel = getModelById(actualFallbackModelId);
+          console.log(`[Router] Fallback model lookup: ${actualFallbackModelId} -> ${fallbackModel?.provider}`);
+
           if (fallbackModel) {
             try {
+              console.log(`[Router] Executing fallback stream with provider: ${fallbackModel.provider}, model: ${actualFallbackModelId}`);
               yield* this.executeStreamChat(fallbackModel.provider, actualFallbackModelId, options);
               return; // Success
             } catch (fallbackError) {
-              console.error(
-                `[Router] Fallback stream also failed: ${fallbackError instanceof Error ? fallbackError.message : 'unknown error'}`
-              );
+              const fallbackErrorMsg = fallbackError instanceof Error ? fallbackError.message : 'unknown error';
+              console.error(`[Router] Fallback stream also failed: ${fallbackErrorMsg}`);
+              // Throw a more descriptive error
+              throw new Error(`Primary (${provider}): ${errorMsg}. Fallback (${fallbackModel.provider}): ${fallbackErrorMsg}`);
             }
           }
         }
@@ -155,21 +162,24 @@ export class AIRouter {
     modelId: string,
     options: ChatCompletionOptions
   ): AsyncGenerator<string> {
+    console.log(`[Router] executeStreamChat - provider: ${provider}, modelId: ${modelId}`);
+    const updatedOptions = { ...options, modelId };
+
     switch (provider) {
       case 'openai':
-        yield* this.chatStreamOpenAI({ ...options, modelId });
+        yield* this.chatStreamOpenAI(updatedOptions);
         break;
       case 'anthropic':
-        yield* this.chatStreamAnthropic({ ...options, modelId });
+        yield* this.chatStreamAnthropic(updatedOptions);
         break;
       case 'groq':
-        yield* this.chatStreamGroq({ ...options, modelId });
+        yield* this.chatStreamGroq(updatedOptions);
         break;
       case 'primex':
-        yield* this.chatStreamPrimex({ ...options, modelId });
+        yield* this.chatStreamPrimex(updatedOptions);
         break;
       case 'ollama':
-        yield* this.chatStreamOllama({ ...options, modelId });
+        yield* this.chatStreamOllama(updatedOptions);
         break;
       default:
         throw new Error(`Provider ${provider} not supported`);
