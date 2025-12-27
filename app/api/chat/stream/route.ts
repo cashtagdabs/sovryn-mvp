@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // Check model access permissions
     const userPlan = (user.subscription?.plan as any) || 'FREE';
     if (!canUseModel(userPlan, validatedData.modelId)) {
-      return new Response(`Model ${validatedData.modelId} requires a higher subscription tier`, { status: 403 });
+      return new Response(JSON.stringify({ error: `Model ${validatedData.modelId} requires a higher subscription tier` }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     }
 
     // Create or get conversation
