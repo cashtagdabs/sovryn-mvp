@@ -7,146 +7,133 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model with social features
-model User {
-  id              String         @id @default(cuid())
-  clerkId         String         @unique
-  email           String         @unique
-  name            String?
-  username        String?        @unique
-  bio             String?
-  avatarUrl       String?
-  website         String?
-  twitter         String?
-  github          String?
-  
-  subscription    Subscription?
-  conversations   Conversation[]
-  messages        Message[]
-  searches        Search[]
-  savedPrompts    SavedPrompt[]
-  likedConversations ConversationLike[]
-  
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-}
-
-// Subscription management
-model Subscription {
-  id                     String   @id @default(cuid())
-  userId                 String   @unique
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId       String   @unique
-  stripeSubscriptionId   String?
-  stripePriceId          String?
-  stripeCurrentPeriodEnd DateTime?
-  plan                   String   @default("FREE")
-  status                 String   @default("ACTIVE")
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-}
-
-// Conversation with sharing features
-model Conversation {
-  id          String     @id @default(cuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  model       String     @default("PRIMEX")
-  
-  // Social features
-  isPublic    Boolean    @default(false)
-  shareId     String?    @unique
-  viewCount   Int        @default(0)
-  likeCount   Int        @default(0)
-  
-  messages    Message[]
-  searches    Search[]
-  likes       ConversationLike[]
-  
-  isArchived  Boolean    @default(false)
-  isPinned    Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([userId])
-  @@index([isPublic])
-  @@index([shareId])
-}
-
-// Conversation likes
-model ConversationLike {
-  id             String       @id @default(cuid())
-  userId         String
-  conversationId String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-
-  @@unique([userId, conversationId])
-  @@index([conversationId])
-}
-
-// Message history
-model Message {
-  id             String       @id @default(cuid())
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role           String
-  content        String
-  model          String?
-  citations      Citation[]
-  tokenCount     Int?
-  createdAt      DateTime     @default(now())
-
-  @@index([conversationId])
-}
-
-model Search {
-  id             String       @id @default(cuid())
-  conversationId String?
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  query          String
-  results        String
-  createdAt      DateTime     @default(now())
-
-  @@index([userId])
-}
-
-// Citation references
 model Citation {
-  id        String   @id @default(cuid())
+  id        String   @id
   messageId String
-  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   title     String
   url       String
   snippet   String
   order     Int
   createdAt DateTime @default(now())
+  Message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
 }
 
-// Saved prompts library (enhanced for marketplace)
+model Conversation {
+  id               String             @id
+  userId           String
+  title            String
+  isArchived       Boolean            @default(false)
+  isPinned         Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  isPublic         Boolean            @default(false)
+  likeCount        Int                @default(0)
+  shareId          String?            @unique
+  viewCount        Int                @default(0)
+  model            String             @default("PRIMEX")
+  User             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ConversationLike ConversationLike[]
+  Message          Message[]
+  Search           Search[]
+
+  @@index([isPublic])
+  @@index([shareId])
+  @@index([userId])
+}
+
+model ConversationLike {
+  id             String       @id
+  userId         String
+  conversationId String
+  createdAt      DateTime     @default(now())
+  Conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  User           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId])
+  @@index([conversationId])
+}
+
+model Message {
+  id             String       @id
+  conversationId String
+  userId         String
+  content        String
+  tokenCount     Int?
+  createdAt      DateTime     @default(now())
+  role           String
+  model          String?
+  Citation       Citation[]
+  Conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  User           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
 model SavedPrompt {
-  id          String   @id @default(cuid())
+  id          String   @id
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   description String?
   prompt      String
   category    String?
-  tags        String   // comma-separated tags
+  tags        String
   isPublic    Boolean  @default(false)
   usageCount  Int      @default(0)
-  likeCount   Int      @default(0)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime
+  likeCount   Int      @default(0)
+  User        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isPublic])
+  @@index([userId])
+}
+
+model Search {
+  id             String        @id
+  conversationId String?
+  userId         String
+  query          String
+  results        String
+  createdAt      DateTime      @default(now())
+  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  User           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([isPublic])
+}
+
+model Subscription {
+  id                     String    @id
+  userId                 String    @unique
+  stripeCustomerId       String    @unique
+  stripeSubscriptionId   String?
+  stripePriceId          String?
+  stripeCurrentPeriodEnd DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime
+  plan                   String    @default("FREE")
+  status                 String    @default("ACTIVE")
+  User                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id               String             @id
+  clerkId          String             @unique
+  email            String             @unique
+  name             String?
+  avatarUrl        String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  bio              String?
+  github           String?
+  twitter          String?
+  username         String?            @unique
+  website          String?
+  Conversation     Conversation[]
+  ConversationLike ConversationLike[]
+  Message          Message[]
+  SavedPrompt      SavedPrompt[]
+  Search           Search[]
+  Subscription     Subscription?
 }
