@@ -136,4 +136,24 @@ model User {
   SavedPrompt      SavedPrompt[]
   Search           Search[]
   Subscription     Subscription?
+  OAuthConnection  OAuthConnection[]
+}
+
+model OAuthConnection {
+  id                String   @id
+  userId            String
+  provider          String   // github, google, dropbox
+  accessToken       String
+  refreshToken      String?
+  providerAccountId String
+  providerUsername  String?
+  scopes            String?
+  expiresAt         DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([provider])
 }

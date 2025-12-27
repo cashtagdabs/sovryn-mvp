@@ -95,190 +95,195 @@ export const AI_PROVIDERS: AIProvider[] = [
         maxTokens: 4096,
         inputCost: 0.5,
         outputCost: 1.5,
-        ba  {
-        id: 'anthropic',
-        name: 'Anthropic',
-        models: [
-          {
-            id: 'claude-3-opus-20240229',
-            name: 'Claude 3 Opus',
-            provider: 'anthropic',
-            contextWindow: 200000,
-            maxTokens: 4096,
-            inputCost: 15,
-            outputCost: 75,
-          },
-          {
-            id: 'claude-3-sonnet-20240229',
-            name: 'Claude 3 Sonnet',
-            provider: 'anthropic',
-            contextWindow: 200000,
-            maxTokens: 4096,
-            inputCost: 3,
-            outputCost: 15,
-          },
-          {
-            id: 'claude-3-haiku-20240307',
-            name: 'Claude 3 Haiku',
-            provider: 'anthropic',
-            contextWindow: 200000,
-            maxTokens: 4096,
-            inputCost: 0.25,
-            outputCost: 1.25,
-          },
-        ],
+        badge: 'CHEAPEST',
+      },
+    ],
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic',
+    featured: false,
+    models: [
+      {
+        id: 'claude-3-opus-20240229',
+        name: 'Claude 3 Opus',
+        provider: 'anthropic',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 15,
+        outputCost: 75,
       },
       {
-        id: 'groq',
-        name: 'Groq (FREE Tier)',
-        models: [
-          {
-            id: 'llama-3.3-70b-versatile',
-            name: 'LLaMA 3.3 70B',
-            provider: 'groq',
-            contextWindow: 131072,
-            maxTokens: 32768,
-            inputCost: 0, // FREE on Groq free tier!
-            outputCost: 0,
-            badge: 'RECOMMENDED',
-            description: '🆓 FREE - Ultra-fast inference on Groq LPUs (14,400 req/day)',
-          },
-          {
-            id: 'llama-3.1-8b-instant',
-            name: 'LLaMA 3.1 8B Instant',
-            provider: 'groq',
-            contextWindow: 131072,
-            maxTokens: 8192,
-            inputCost: 0, // FREE on Groq free tier!
-            outputCost: 0,
-            badge: 'FASTEST',
-            description: '🆓 FREE - Lightning fast responses (14,400 req/day)',
-          },
-          {
-            id: 'mixtral-8x7b-32768',
-            name: 'Mixtral 8x7B',
-            provider: 'groq',
-            contextWindow: 32768,
-            maxTokens: 32768,
-            inputCost: 0, // FREE on Groq free tier!
-            outputCost: 0,
-            description: '🆓 FREE - Great for code and reasoning',
-          },
-          {
-            id: 'gemma2-9b-it',
-            name: 'Gemma 2 9B',
-            provider: 'groq',
-            contextWindow: 8192,
-            maxTokens: 8192,
-            inputCost: 0, // FREE on Groq free tier!
-            outputCost: 0,
-            description: '🆓 FREE - Google\'s efficient model',
-          },
-        ],
+        id: 'claude-3-sonnet-20240229',
+        name: 'Claude 3 Sonnet',
+        provider: 'anthropic',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 3,
+        outputCost: 15,
       },
       {
-        id: 'ollama',
-        name: 'Ollama (Local)',
-        models: [
-          {
-            id: 'gpt-oss-20b',
-            name: 'GPT OSS 20B',
-            provider: 'ollama',
-            contextWindow: 32768,
-            maxTokens: 4096,
-            inputCost: 0, // Local = FREE
-            outputCost: 0,
-            badge: 'CHEAPEST',
-            description: '🏠 LOCAL - Runs on your machine, fully private',
-          },
-          {
-            id: 'llama3.2:1b',
-            name: 'LLaMA 3.2 1B',
-            provider: 'ollama',
-            contextWindow: 131072,
-            maxTokens: 4096,
-            inputCost: 0,
-            outputCost: 0,
-            description: '🏠 LOCAL - Lightweight model for fast responses',
-          },
-          {
-            id: 'phi4-mini-reasoning',
-            name: 'Phi-4 Mini Reasoning',
-            provider: 'ollama',
-            contextWindow: 16384,
-            maxTokens: 4096,
-            inputCost: 0,
-            outputCost: 0,
-            description: '🏠 LOCAL - Microsoft reasoning model',
-          },
-        ],
+        id: 'claude-3-haiku-20240307',
+        name: 'Claude 3 Haiku',
+        provider: 'anthropic',
+        contextWindow: 200000,
+        maxTokens: 4096,
+        inputCost: 0.25,
+        outputCost: 1.25,
       },
-    ];
+    ],
+  },
+  {
+    id: 'groq',
+    name: 'Groq (FREE Tier)',
+    models: [
+      {
+        id: 'llama-3.3-70b-versatile',
+        name: 'LLaMA 3.3 70B',
+        provider: 'groq',
+        contextWindow: 131072,
+        maxTokens: 32768,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        badge: 'RECOMMENDED',
+        description: '🆓 FREE - Ultra-fast inference on Groq LPUs (14,400 req/day)',
+      },
+      {
+        id: 'llama-3.1-8b-instant',
+        name: 'LLaMA 3.1 8B Instant',
+        provider: 'groq',
+        contextWindow: 131072,
+        maxTokens: 8192,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        badge: 'FASTEST',
+        description: '🆓 FREE - Lightning fast responses (14,400 req/day)',
+      },
+      {
+        id: 'mixtral-8x7b-32768',
+        name: 'Mixtral 8x7B',
+        provider: 'groq',
+        contextWindow: 32768,
+        maxTokens: 32768,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        description: '🆓 FREE - Great for code and reasoning',
+      },
+      {
+        id: 'gemma2-9b-it',
+        name: 'Gemma 2 9B',
+        provider: 'groq',
+        contextWindow: 8192,
+        maxTokens: 8192,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        description: '🆓 FREE - Google\'s efficient model',
+      },
+    ],
+  },
+  {
+    id: 'ollama',
+    name: 'Ollama (Local)',
+    models: [
+      {
+        id: 'gpt-oss-20b',
+        name: 'GPT OSS 20B',
+        provider: 'ollama',
+        contextWindow: 32768,
+        maxTokens: 4096,
+        inputCost: 0, // Local = FREE
+        outputCost: 0,
+        badge: 'CHEAPEST',
+        description: '🏠 LOCAL - Runs on your machine, fully private',
+      },
+      {
+        id: 'llama3.2:1b',
+        name: 'LLaMA 3.2 1B',
+        provider: 'ollama',
+        contextWindow: 131072,
+        maxTokens: 4096,
+        inputCost: 0,
+        outputCost: 0,
+        description: '🏠 LOCAL - Lightweight model for fast responses',
+      },
+      {
+        id: 'phi4-mini-reasoning',
+        name: 'Phi-4 Mini Reasoning',
+        provider: 'ollama',
+        contextWindow: 16384,
+        maxTokens: 4096,
+        inputCost: 0,
+        outputCost: 0,
+        description: '🏠 LOCAL - Microsoft reasoning model',
+      },
+    ],
+  },
+];
 
-    export const getModelById = (modelId: string): AIModel | undefined => {
-      // Handle both formats: 'gpt-4-turbo-preview' and 'openai:gpt-4-turbo-preview'
-      let searchId = modelId;
-      if (modelId.includes(':')) {
-        searchId = modelId.split(':')[1];
+export const getModelById = (modelId: string): AIModel | undefined => {
+  // Handle both formats: 'gpt-4-turbo-preview' and 'openai:gpt-4-turbo-preview'
+  let searchId = modelId;
+  if (modelId.includes(':')) {
+    searchId = modelId.split(':')[1];
+  }
+
+  for (const provider of AI_PROVIDERS) {
+    const model = provider.models.find((m) => m.id === searchId);
+    if (model) return model;
+  }
+  return undefined;
+};
+
+export const getProviderById = (providerId: string): AIProvider | undefined => {
+  return AI_PROVIDERS.find((p) => p.id === providerId);
+};
+
+// Initialize AI clients - create fresh instances each time to avoid stale cache issues
+export const getOpenAIClient = () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.warn('[OpenAI] OPENAI_API_KEY not set');
+    return null;
+  }
+  return new OpenAI({ apiKey });
+};
+
+export const getAnthropicClient = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.warn('[Anthropic] ANTHROPIC_API_KEY not set');
+    return null;
+  }
+  return new Anthropic({ apiKey });
+};
+
+export const getGroqClient = () => {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.warn('[Groq] GROQ_API_KEY not set');
+    return null;
+  }
+  console.log('[Groq] Creating client with key:', apiKey.substring(0, 8) + '...');
+  return new Groq({ apiKey });
+};
+
+// PRIMEX client - connects to local backend
+export const getPrimexClient = () => {
+  const baseURL = process.env.PRIMEX_BACKEND_URL || '';
+  if (!baseURL) {
+    console.warn('[PRIMEX] PRIMEX_BACKEND_URL is not set. PRIMEX will not work in production unless this is configured!');
+  }
+  return {
+    chat: async (messages: Array<{ role: string; content: string }>, model: string = 'llama3.2:1b') => {
+      const response = await fetch(`${baseURL}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages, model }),
+      });
+      if (!response.ok) {
+        throw new Error(`PRIMEX API error: ${response.statusText}`);
       }
-
-      for (const provider of AI_PROVIDERS) {
-        const model = provider.models.find((m) => m.id === searchId);
-        if (model) return model;
-      }
-      return undefined;
-    };
-
-    export const getProviderById = (providerId: string): AIProvider | undefined => {
-      return AI_PROVIDERS.find((p) => p.id === providerId);
-    };
-
-    // Initialize AI clients - create fresh instances each time to avoid stale cache issues
-    export const getOpenAIClient = () => {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        console.warn('[OpenAI] OPENAI_API_KEY not set');
-        return null;
-      }
-      return new OpenAI({ apiKey });
-    };
-
-    export const getAnthropicClient = () => {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
-      if (!apiKey) {
-        console.warn('[Anthropic] ANTHROPIC_API_KEY not set');
-        return null;
-      }
-      return new Anthropic({ apiKey });
-    };
-
-    export const getGroqClient = () => {
-      const apiKey = process.env.GROQ_API_KEY;
-      if (!apiKey) {
-        console.warn('[Groq] GROQ_API_KEY not set');
-        return null;
-      }
-      console.log('[Groq] Creating client with key:', apiKey.substring(0, 8) + '...');
-      return new Groq({ apiKey });
-    };
-
-    // PRIMEX client - connects to local backend
-    export const getPrimexClient = () => {
-      const baseURL = process.env.PRIMEX_BACKEND_URL || '';
-      if (!baseURL) {
-        console.warn('[PRIMEX] PRIMEX_BACKEND_URL is not set. PRIMEX will not work in production unless this is configured!');
-      }
-      return {
-        chat: async (messages: Array<{ role: string; content: string }>, model: string = 'llama3.2:1b') => {
-          const response = await fetch(`${baseURL}/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages, model }),
-          });
-          if (!response.ok) {
-            throw new Error(`PRIMEX API error: ${response.statusText}`);
-          }
-          return response.json();
-        },
-      };
-    };
+      return response.json();
+    },
+  };
+};

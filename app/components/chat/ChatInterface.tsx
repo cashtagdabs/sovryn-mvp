@@ -21,6 +21,13 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
     setInput('');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as unknown as React.FormEvent);
+    }
+  };
+
   return (
     <div className="flex h-full flex-col bg-gray-950 text-white">
       <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
@@ -47,6 +54,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Ask anything..."
             className="flex-1 resize-none rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm outline-none focus:border-purple-500"
