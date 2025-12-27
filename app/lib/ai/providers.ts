@@ -133,7 +133,7 @@ export const AI_PROVIDERS: AIProvider[] = [
   },
   {
     id: 'groq',
-    name: 'Groq',
+    name: 'Groq (FREE Tier)',
     models: [
       {
         id: 'llama-3.3-70b-versatile',
@@ -141,21 +141,41 @@ export const AI_PROVIDERS: AIProvider[] = [
         provider: 'groq',
         contextWindow: 131072,
         maxTokens: 32768,
-        inputCost: 0.59,
-        outputCost: 0.79,
-        badge: 'FASTEST',
-        description: 'Ultra-fast inference on Groq LPUs',
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        badge: 'RECOMMENDED',
+        description: '🆓 FREE - Ultra-fast inference on Groq LPUs (14,400 req/day)',
       },
       {
         id: 'llama-3.1-8b-instant',
-        name: 'LLaMA 3.1 8B',
+        name: 'LLaMA 3.1 8B Instant',
         provider: 'groq',
         contextWindow: 131072,
         maxTokens: 8192,
-        inputCost: 0.05,
-        outputCost: 0.08,
-        badge: 'CHEAPEST',
-        description: 'Fast and affordable',
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        badge: 'FASTEST',
+        description: '🆓 FREE - Lightning fast responses (14,400 req/day)',
+      },
+      {
+        id: 'mixtral-8x7b-32768',
+        name: 'Mixtral 8x7B',
+        provider: 'groq',
+        contextWindow: 32768,
+        maxTokens: 32768,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        description: '🆓 FREE - Great for code and reasoning',
+      },
+      {
+        id: 'gemma2-9b-it',
+        name: 'Gemma 2 9B',
+        provider: 'groq',
+        contextWindow: 8192,
+        maxTokens: 8192,
+        inputCost: 0, // FREE on Groq free tier!
+        outputCost: 0,
+        description: '🆓 FREE - Google\'s efficient model',
       },
     ],
   },
@@ -179,41 +199,41 @@ export const getProviderById = (providerId: string): AIProvider | undefined => {
   return AI_PROVIDERS.find((p) => p.id === providerId);
 };
 
-// Initialize AI clients
-let openaiClient: OpenAI | null = null;
-let anthropicClient: Anthropic | null = null;
-let groqClient: Groq | null = null;
-
+// Initialize AI clients - create fresh instances each time to avoid stale cache issues
 export const getOpenAIClient = () => {
-  if (!openaiClient && process.env.OPENAI_API_KEY) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.warn('[OpenAI] OPENAI_API_KEY not set');
+    return null;
   }
-  return openaiClient;
+  return new OpenAI({ apiKey });
 };
 
 export const getAnthropicClient = () => {
-  if (!anthropicClient && process.env.ANTHROPIC_API_KEY) {
-    anthropicClient = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.warn('[Anthropic] ANTHROPIC_API_KEY not set');
+    return null;
   }
-  return anthropicClient;
+  return new Anthropic({ apiKey });
 };
 
 export const getGroqClient = () => {
-  if (!groqClient && process.env.GROQ_API_KEY) {
-    groqClient = new Groq({
-      apiKey: process.env.GROQ_API_KEY,
-    });
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.warn('[Groq] GROQ_API_KEY not set');
+    return null;
   }
-  return groqClient;
+  console.log('[Groq] Creating client with key:', apiKey.substring(0, 8) + '...');
+  return new Groq({ apiKey });
 };
 
 // PRIMEX client - connects to local backend
 export const getPrimexClient = () => {
-  const baseURL = process.env.PRIMEX_BACKEND_URL || 'http://localhost:8000';
+  const baseURL = process.env.PRIMEX_BACKEND_URL || '';
+  if (!baseURL) {
+    console.warn('[PRIMEX] PRIMEX_BACKEND_URL is not set. PRIMEX will not work in production unless this is configured!');
+  }
   return {
     chat: async (messages: Array<{ role: string; content: string }>, model: string = 'llama3.2:1b') => {
       const response = await fetch(`${baseURL}/chat`, {

@@ -193,6 +193,7 @@ export function DashboardContent() {
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
+                aria-label="Toggle notifications"
                 className="relative p-2 hover:bg-white/10 rounded-lg transition-colors"
               >
                 <Bell className="w-5 h-5 text-white/70" />
@@ -220,7 +221,7 @@ export function DashboardContent() {
 
             {/* Settings */}
             <Link href="/settings">
-              <button className="p-2 hover:bg-white/10 rounded-lg transition-colors border-l border-white/10 pl-4">
+              <button aria-label="Settings" className="p-2 hover:bg-white/10 rounded-lg transition-colors border-l border-white/10 pl-4">
                 <Settings className="w-5 h-5 text-white/70" />
               </button>
             </Link>

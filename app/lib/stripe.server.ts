@@ -4,10 +4,14 @@ let stripeInstance: Stripe | null = null;
 
 function getStripe() {
     if (!stripeInstance) {
-        if (!process.env.STRIPE_SECRET_KEY) {
+        const secretKey = process.env.STRIPE_SECRET_KEY;
+        if (!secretKey) {
+            // During build, don't throw - just warn
+            console.warn('[Stripe] STRIPE_SECRET_KEY is not set - Stripe features will not work');
+            // Return a dummy instance that will throw on actual use
             throw new Error('STRIPE_SECRET_KEY is not set');
         }
-        stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+        stripeInstance = new Stripe(secretKey, {
             apiVersion: '2025-10-29.clover' as any,
             typescript: true,
         });

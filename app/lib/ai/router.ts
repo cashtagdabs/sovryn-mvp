@@ -53,13 +53,12 @@ export class AIRouter {
       // Invalidate health cache for this provider
       healthManager.invalidateCache(provider);
 
-      // Attempt fallback if primary is PRIMEX
+      // Attempt all fallbacks if primary is PRIMEX or OLLAMA
       if (provider === 'primex' || provider === 'ollama') {
-        console.log(`[Router] Attempting fallback for ${options.modelId}`);
-        const fallbackModelId = await resolveFallbackModel(actualModelId);
-
-        if (fallbackModelId) {
-          // Extract actual model ID if in format 'provider:model'
+        console.log(`[Router] Attempting fallback chain for ${options.modelId}`);
+        const fallbackChain = getFallbackChain(actualModelId) || [];
+        const errors = [];
+        for (const fallbackModelId of fallbackChain) {
           const actualFallbackModelId = fallbackModelId.includes(':')
             ? fallbackModelId.split(':')[1]
             : fallbackModelId;
@@ -70,15 +69,21 @@ export class AIRouter {
               result.fallback = true;
               return result;
             } catch (fallbackError) {
-              console.error(
-                `[Router] Fallback also failed: ${fallbackError instanceof Error ? fallbackError.message : 'unknown error'}`
-              );
+              const msg = `[Router] Fallback ${fallbackModel.provider}:${actualFallbackModelId} failed: ${fallbackError instanceof Error ? fallbackError.message : 'unknown error'}`;
+              console.error(msg);
+              errors.push(msg);
+              // Invalidate health cache for this fallback provider
+              healthManager.invalidateCache(fallbackModel.provider);
             }
+          } else {
+            errors.push(`[Router] Fallback model not found: ${actualFallbackModelId}`);
           }
         }
+        // If all fallbacks failed, throw aggregate error
+        throw new Error(`All fallback attempts failed. Primary error: ${error instanceof Error ? error.message : error}. Fallback errors: ${errors.join(' | ')}`);
       }
 
-      // Re-throw original error if all attempts failed
+      // Re-throw original error if all attempts failed and not PRIMEX/OLLAMA
       throw error;
     }
   }
@@ -306,65 +311,109 @@ export class AIRouter {
       throw new Error('Groq client not initialized');
     }
 
-    const response = await client.chat.completions.create({
-      model: options.modelId,
-      messages: options.messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens,
-    });
+    try {
+      const response = await client.chat.completions.create({
+        model: options.modelId,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens,
+      });
 
-    return {
-      content: response.choices[0]?.message?.content || '',
-      model: response.model,
-      usage: response.usage
-        ? {
-          promptTokens: response.usage.prompt_tokens,
-          completionTokens: response.usage.completion_tokens,
-          totalTokens: response.usage.total_tokens,
+      return {
+        content: response.choices[0]?.message?.content || '',
+        model: response.model,
+        usage: response.usage
+          ? {
+            promptTokens: response.usage.prompt_tokens,
+            completionTokens: response.usage.completion_tokens,
+            totalTokens: response.usage.total_tokens,
+          }
+          : undefined,
+      };
+    } catch (err: any) {
+      // Log and rethrow with more detail
+      let errorMsg = '[Groq] Unknown error';
+      if (err && typeof err === 'object') {
+        if (err.message) errorMsg = `[Groq] ${err.message}`;
+        if (err.response && err.response.data) {
+          errorMsg += ` | Response: ${JSON.stringify(err.response.data)}`;
         }
-        : undefined,
-    };
+      }
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
   }
 
   private async *chatStreamGroq(options: ChatCompletionOptions): AsyncGenerator<string> {
     const client = getGroqClient();
     if (!client) {
-      throw new Error('Groq client not initialized');
+      throw new Error('Groq client not initialized - GROQ_API_KEY may be missing');
     }
 
-    const stream = await client.chat.completions.create({
-      model: options.modelId,
-      messages: options.messages,
-      temperature: options.temperature ?? 0.7,
-      max_tokens: options.maxTokens,
-      stream: true,
-    });
+    try {
+      console.log(`[Groq] Starting stream for model: ${options.modelId}`);
+      const stream = await client.chat.completions.create({
+        model: options.modelId,
+        messages: options.messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens || 4096,
+        stream: true,
+      });
 
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        yield content;
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          yield content;
+        }
       }
+    } catch (err: any) {
+      let errorMsg = 'Connection error';
+      if (err && typeof err === 'object') {
+        if (err.message) errorMsg = err.message;
+        if (err.status) errorMsg = `${err.status}: ${errorMsg}`;
+        if (err.error?.message) errorMsg = err.error.message;
+      }
+      console.error(`[Groq Stream Error] ${errorMsg}`, err);
+      throw new Error(errorMsg);
     }
   }
 
   private async chatWithPrimex(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
-    const response = await fetch(`${PRIMEX_BACKEND_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: options.modelId,
-        messages: options.messages,
-        temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`PRIMEX request failed with status ${response.status}`);
+    // Check if PRIMEX backend is configured
+    if (!PRIMEX_BACKEND_URL || PRIMEX_BACKEND_URL === 'http://localhost:8000') {
+      throw new Error('PRIMEX backend not configured - set PRIMEX_BACKEND_URL environment variable');
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+      const response = await fetch(`${PRIMEX_BACKEND_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: options.modelId,
+          messages: options.messages,
+          temperature: options.temperature ?? 0.7,
+          max_tokens: options.maxTokens,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        throw new Error(`PRIMEX request failed with status ${response.status}`);
+      }
+
+      data = await response.json();
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw new Error('PRIMEX request timed out');
+      }
+      throw new Error(`PRIMEX connection failed: ${err.message || 'fetch failed'}`);
+    }
 
     return {
       content: data?.content || data?.response || '',

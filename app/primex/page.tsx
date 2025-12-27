@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import PrimexCloneSelector from '../components/primex/PrimexCloneSelector';
 import ModeSwitcher from '../components/ModeSwitcher';
+import TakeOverSection from '../components/primex/TakeOverSection';
 
 export default async function PrimexPage() {
   const { userId } = await auth();
@@ -98,6 +99,9 @@ export default async function PrimexPage() {
             </div>
           </div>
         </div>
+
+        {/* Take Over Section */}
+        <TakeOverSection />
 
         <PrimexCloneSelector />
       </div>

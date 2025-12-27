@@ -80,14 +80,20 @@ function createInMemoryPrisma() {
   };
 }
 
+// Track if we've already tried to connect and failed
+let connectionFailed = false;
+
 function getPrisma() {
   if (!prismaInstance) {
-    if (!process.env.DATABASE_URL) {
-      // No database in env — fall back to in-memory (dev only)
+    // Force in-memory mode if OFFLINE_MODE is set or connection previously failed
+    const forceOffline = process.env.OFFLINE_MODE === 'true' || connectionFailed;
+
+    if (!process.env.DATABASE_URL || forceOffline) {
+      // No database in env or offline mode — fall back to in-memory (dev only)
       if (process.env.NODE_ENV !== 'production') {
         prismaInstance = createInMemoryPrisma();
         global.prisma = prismaInstance;
-        console.warn('[DB] Using in-memory Prisma mock for development');
+        console.warn('[DB] Using in-memory Prisma mock for development (offline mode)');
         return prismaInstance;
       }
       throw new Error('DATABASE_URL not set');
@@ -101,6 +107,7 @@ function getPrisma() {
     } catch (e) {
       console.error('[DB Init Error]', e);
       if (process.env.NODE_ENV !== 'production') {
+        connectionFailed = true;
         prismaInstance = createInMemoryPrisma();
         global.prisma = prismaInstance;
         console.warn('[DB] Falling back to in-memory Prisma mock after init error');
@@ -110,6 +117,25 @@ function getPrisma() {
     }
   }
   return prismaInstance;
+}
+
+// Wrapper to handle connection errors at runtime
+export async function withDatabaseFallback<T>(
+  operation: () => Promise<T>,
+  fallback: T
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: any) {
+    if (error?.code === 'P1001' || error?.message?.includes("Can't reach database server")) {
+      console.warn('[DB] Database unreachable, using fallback value');
+      connectionFailed = true;
+      // Reset instance to trigger in-memory on next access
+      prismaInstance = null;
+      return fallback;
+    }
+    throw error;
+  }
 }
 
 export const prisma = new Proxy({}, {

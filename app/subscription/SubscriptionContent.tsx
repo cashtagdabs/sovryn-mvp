@@ -156,6 +156,7 @@ export function SubscriptionContent() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.back()}
+                aria-label="Go back"
                 className="rounded-lg p-2 text-white/60 hover:bg-white/5 hover:text-white"
               >
                 <ArrowLeft className="h-5 w-5" />

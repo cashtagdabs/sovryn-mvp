@@ -3,14 +3,26 @@
 
 import Stripe from 'stripe';
 
-// Initialize Stripe with server secret (only use in server-side code)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-10-29.clover',
-});
+// Lazy-initialized Stripe client to avoid build-time errors
+let stripeClient: Stripe | null = null;
+
+function getStripe(): Stripe {
+  if (!stripeClient) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    stripeClient = new Stripe(secretKey, {
+      apiVersion: '2025-10-29.clover' as any,
+    });
+  }
+  return stripeClient;
+}
 
 const STRIPE_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
-if (!STRIPE_PUBLISHABLE_KEY) {
+// Only warn in development, not during build
+if (typeof window !== 'undefined' && !STRIPE_PUBLISHABLE_KEY) {
   console.warn(
     '[Stripe] NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set. Frontend Stripe features may not work.'
   );
@@ -141,7 +153,7 @@ export function canUseModel(userPlan: SubscriptionTier, modelId: string): boolea
 }
 
 export async function createCustomer(email: string, name?: string): Promise<Stripe.Customer> {
-  return await stripe.customers.create({
+  return await getStripe().customers.create({
     email,
     name,
     metadata: {
@@ -154,7 +166,7 @@ export async function createSubscription(
   customerId: string,
   priceId: string
 ): Promise<Stripe.Subscription> {
-  return await stripe.subscriptions.create({
+  return await getStripe().subscriptions.create({
     customer: customerId,
     items: [{ price: priceId }],
     payment_behavior: 'default_incomplete',
@@ -166,7 +178,7 @@ export async function createBillingPortalSession(
   customerId: string,
   returnUrl: string
 ): Promise<Stripe.BillingPortal.Session> {
-  return await stripe.billingPortal.sessions.create({
+  return await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   });
