@@ -11,7 +11,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
-  const [modelId, setModelId] = useState<string>('primex-ultra');
+  const [modelId, setModelId] = useState<string>('llama-3.3-70b-versatile');
   const { messages, isLoading, sendMessage } = useChat(conversationId);
 
   const handleSubmit = async (e: React.FormEvent) => {

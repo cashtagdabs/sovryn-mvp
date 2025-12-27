@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     // Check model access permissions
     const userPlan = (user.Subscription?.plan as any) || 'FREE';
     if (!canUseModel(userPlan, validatedData.modelId)) {
-      return new Response(`Model ${validatedData.modelId} requires a higher subscription tier`, { status: 403 });
+      return new Response(JSON.stringify({ error: `Model ${validatedData.modelId} requires a higher subscription tier` }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     }
 
     // Create or get conversation
@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save user message
+    console.log(`[DB] Attempting to save user message for conversation: ${conversation.id}`);
     await prisma.message.create({
       data: {
         id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -138,6 +139,7 @@ export async function POST(req: NextRequest) {
           }
 
           // Save assistant message after streaming completes
+          console.log(`[DB] Attempting to save assistant message for conversation: ${conversation.id}`);
           const assistantMessage = await prisma.message.create({
             data: {
               id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,

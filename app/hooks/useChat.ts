@@ -82,7 +82,9 @@ export function useChat(initialConversationId?: string) {
           window.location.href = '/sign-in';
           return;
         }
-        throw new Error('Failed to send message: ' + bodyText);
+        const errorObject = JSON.parse(bodyText);
+        const errorMessage = errorObject.error || 'Failed to send message: Unknown server error';
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();
@@ -135,7 +137,7 @@ export function useChat(initialConversationId?: string) {
       }
     } catch (error) {
       console.error('Chat error:', error);
-      toast.error('Failed to send message. Please try again.');
+      toast.error(error.message || 'Failed to send message. Please try again.');
 
       // Safe rollback: restore to original message count
       setMessages((prev) => {

@@ -21,8 +21,7 @@ export interface AIModel {
   description?: string;
 }
 
-export const AI_PROVIDERS: AIProvider[] = [
-  // PRIMEX - Featured first as the primary/best option
+export const AI_PROVIDERS: AIProvider[] =  // PRIMEX - Featured first as the primary/best option
   {
     id: 'primex',
     name: 'PRIMEX',
@@ -67,6 +66,7 @@ export const AI_PROVIDERS: AIProvider[] = [
   {
     id: 'openai',
     name: 'OpenAI',
+    featured: false,
     models: [
       {
         id: 'gpt-4-turbo-preview',
@@ -94,11 +94,7 @@ export const AI_PROVIDERS: AIProvider[] = [
         maxTokens: 4096,
         inputCost: 0.5,
         outputCost: 1.5,
-        badge: 'CHEAPEST',
-      },
-    ],
-  },
-  {
+        ba  {
     id: 'anthropic',
     name: 'Anthropic',
     models: [
