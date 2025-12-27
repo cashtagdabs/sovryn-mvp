@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save user message
+    console.log(`[DB] Attempting to save user message for conversation: ${conversation.id}`);
     await prisma.message.create({
       data: {
         conversationId: conversation.id,
@@ -131,6 +132,7 @@ export async function POST(req: NextRequest) {
           }
 
           // Save assistant message after streaming completes
+          console.log(`[DB] Attempting to save assistant message for conversation: ${conversation.id}`);
           const assistantMessage = await prisma.message.create({
             data: {
               conversationId: conversation.id,
