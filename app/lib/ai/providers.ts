@@ -22,11 +22,47 @@ export interface AIModel {
 }
 
 export const AI_PROVIDERS: AIProvider[] = [
+  // Other providers
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    featured: true, // Make OpenAI the featured provider
+    models: [
+      {
+        id: 'gpt-4-turbo-preview',
+        name: 'GPT-4 Turbo',
+        provider: 'openai',
+        contextWindow: 128000,
+        maxTokens: 4096,
+        inputCost: 10,
+        outputCost: 30,
+      },
+      {
+        id: 'gpt-4',
+        name: 'GPT-4',
+        provider: 'openai',
+        contextWindow: 8192,
+        maxTokens: 4096,
+        inputCost: 30,
+        outputCost: 60,
+      },
+      {
+        id: 'gpt-3.5-turbo',
+        name: 'GPT-3.5 Turbo',
+        provider: 'openai',
+        contextWindow: 16384,
+        maxTokens: 4096,
+        inputCost: 0.5,
+        outputCost: 1.5,
+        badge: 'CHEAPEST',
+      },
+    ],
+  },
   // PRIMEX - Featured first as the primary/best option
   {
     id: 'primex',
     name: 'PRIMEX',
-    featured: true,
+    featured: false, // No longer featured
     models: [
       {
         id: 'primex-ultra',
@@ -59,45 +95,7 @@ export const AI_PROVIDERS: AIProvider[] = [
         inputCost: 0,
         outputCost: 0,
         badge: 'SMART',
-        description: 'Strategic analysis and complex reasoning',
-      },
-    ],
-  },
-  // Other providers
-  {
-    id: 'openai',
-    name: 'OpenAI',
-    models: [
-      {
-        id: 'gpt-4-turbo-preview',
-        name: 'GPT-4 Turbo',
-        provider: 'openai',
-        contextWindow: 128000,
-        maxTokens: 4096,
-        inputCost: 10,
-        outputCost: 30,
-      },
-      {
-        id: 'gpt-4',
-        name: 'GPT-4',
-        provider: 'openai',
-        contextWindow: 8192,
-        maxTokens: 4096,
-        inputCost: 30,
-        outputCost: 60,
-      },
-      {
-        id: 'gpt-3.5-turbo',
-        name: 'GPT-3.5 Turbo',
-        provider: 'openai',
-        contextWindow: 16384,
-        maxTokens: 4096,
-        inputCost: 0.5,
-        outputCost: 1.5,
-        badge: 'CHEAPEST',
-      },
-    ],
-  },
+        description: 'Strategic analysis and
   {
     id: 'anthropic',
     name: 'Anthropic',
