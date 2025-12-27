@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const PRIMEX_BACKEND_URL = process.env.PRIMEX_BACKEND_URL || 'http://localhost:8000';
 const OLLAMA_API_URL = process.env.OLLAMA_API_URL || 'http://localhost:11434';
+const DEFAULT_MODEL = process.env.PRIMEX_DEFAULT_MODEL || 'gpt-oss:20b';
 
 // Fallback to Ollama directly when PRIMEX backend is unavailable
 async function chatWithOllama(message: string, model: string, history: any[]) {
@@ -17,7 +18,7 @@ async function chatWithOllama(message: string, model: string, history: any[]) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: model || 'llama3.2:1b',
+      model: model || DEFAULT_MODEL,
       messages,
       stream: false
     })
@@ -30,7 +31,7 @@ async function chatWithOllama(message: string, model: string, history: any[]) {
   const data = await response.json();
   return {
     response: data.message?.content || 'No response from model',
-    model: model || 'llama3.2:1b',
+    model: model || DEFAULT_MODEL,
     source: 'ollama-direct'
   };
 }
@@ -38,7 +39,7 @@ async function chatWithOllama(message: string, model: string, history: any[]) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, model = 'llama3.2:1b', conversation_history = [] } = body;
+    const { message, model = DEFAULT_MODEL, conversation_history = [] } = body;
 
     if (!message) {
       return NextResponse.json(
