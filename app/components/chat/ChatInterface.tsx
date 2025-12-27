@@ -11,7 +11,7 @@ interface ChatInterfaceProps {
 
 export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
-  const [modelId, setModelId] = useState<string>('gpt-3.5-turbo');
+  const [modelId, setModelId] = useState<string>('primex-ultra');
   const { messages, isLoading, sendMessage } = useChat(conversationId);
 
   const handleSubmit = async (e: React.FormEvent) => {
