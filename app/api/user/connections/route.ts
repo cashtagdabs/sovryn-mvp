@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import prisma from '@/app/lib/prisma';
+import { prisma } from '@/app/lib/db';
 
 // GET /api/user/connections - List all OAuth connections for current user
 export async function GET(request: NextRequest) {

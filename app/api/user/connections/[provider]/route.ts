@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import prisma from '@/app/lib/prisma';
+import { prisma } from '@/app/lib/db';
 
 // DELETE /api/user/connections/[provider] - Disconnect an OAuth provider
 export async function DELETE(
