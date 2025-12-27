@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      include: { subscription: true },
+      include: { Subscription: true },
     });
 
     if (!user) {
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Allow upgrades from FREE to paid plans; block downgrades/re-purchases
-    if (user.subscription?.status === 'ACTIVE' && user.subscription.plan !== 'FREE') {
+    if (user.Subscription?.status === 'ACTIVE' && user.Subscription.plan !== 'FREE') {
       return NextResponse.json(
         { error: 'User already has an active paid subscription' },
         { status: 400 }
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
     }
 
-    let customerId = user.subscription?.stripeCustomerId;
+    let customerId = user.Subscription?.stripeCustomerId;
 
     // Create or recreate Stripe customer if doesn't exist or is a test mock
     if (!customerId || customerId.startsWith('test_')) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     const origin = req.nextUrl.origin;
     const successUrl = `${origin}/dashboard?status=subscription_success&plan=${plan}`;
     const cancelUrl = `${origin}/subscription?status=checkout_canceled`;
-    
+
     const checkoutSession = await createCheckoutSession(
       customerId,
       selectedPlan.priceId,

@@ -99,8 +99,10 @@ export async function POST(req: NextRequest) {
         if (!conversation) {
             conversation = await prisma.conversation.create({
                 data: {
+                    id: `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                     userId: user.id,
                     title: `Take Over: ${task.substring(0, 50)}...`,
+                    updatedAt: new Date(),
                 }
             });
         }
@@ -150,6 +152,7 @@ NEXT: [What the next step will be, or "TASK COMPLETE" if done]`;
             // Store the user message
             await prisma.message.create({
                 data: {
+                    id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                     conversationId: conversation.id,
                     userId: user.id,
                     role: 'USER',
@@ -161,6 +164,7 @@ NEXT: [What the next step will be, or "TASK COMPLETE" if done]`;
             // Store the AI response
             await prisma.message.create({
                 data: {
+                    id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                     conversationId: conversation.id,
                     userId: user.id,
                     role: 'ASSISTANT',
@@ -313,6 +317,7 @@ Execute the next step to complete the task: "${session.task}"`;
             if (conversationId) {
                 await prisma.message.create({
                     data: {
+                        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
                         conversationId,
                         userId: user.id,
                         role: 'ASSISTANT',

@@ -22,13 +22,14 @@ interface ProviderFallbackMap {
 const MODEL_FALLBACK_MAP: ProviderFallbackMap = {
   // PRIMEX models clone to these fallbacks in order of preference
   // Priority: Groq (FREE tier!) -> OpenAI -> Anthropic
-  // Groq offers a generous free tier - perfect for getting started!
+  // Note: Ollama disabled - not currently running
   'primex-ultra': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant', 'openai:gpt-4-turbo-preview', 'anthropic:claude-3-sonnet-20240229'],
   'primex-architect': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant', 'openai:gpt-4-turbo-preview', 'anthropic:claude-3-sonnet-20240229'],
   'primex-cortex': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant', 'openai:gpt-4-turbo-preview', 'anthropic:claude-3-sonnet-20240229'],
-  // Ollama fallbacks
+  // Ollama fallbacks (also go to Groq)
   'llama3.2:1b': ['groq:llama-3.1-8b-instant', 'groq:llama-3.3-70b-versatile'],
   'llama3.2:3b': ['groq:llama-3.1-8b-instant', 'groq:llama-3.3-70b-versatile'],
+  'gpt-oss-20b': ['groq:llama-3.3-70b-versatile', 'groq:llama-3.1-8b-instant'],
 };
 
 class ProviderHealthManager {

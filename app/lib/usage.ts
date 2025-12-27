@@ -12,14 +12,14 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
   // Get user's subscription
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { subscription: true },
+    include: { Subscription: true },
   });
 
   if (!user) {
     throw new Error('User not found');
   }
 
-  const plan = (user.subscription?.plan as SubscriptionTier) || 'FREE';
+  const plan = (user.Subscription?.plan as SubscriptionTier) || 'FREE';
   const planConfig = SUBSCRIPTION_PLANS[plan];
 
   // Get start of current month

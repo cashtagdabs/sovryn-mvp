@@ -16,17 +16,19 @@ export async function POST(req: NextRequest) {
     // Get or create user
     const clerkUser = await (await clerkClient()).users.getUser(userId);
     const email = clerkUser.emailAddresses[0]?.emailAddress || 'unknown@example.com';
-    const name = clerkUser.firstName && clerkUser.lastName 
-      ? `${clerkUser.firstName} ${clerkUser.lastName}` 
+    const name = clerkUser.firstName && clerkUser.lastName
+      ? `${clerkUser.firstName} ${clerkUser.lastName}`
       : clerkUser.username || undefined;
     const user = await getOrCreateUser(userId, email, name);
 
     // Create conversation
     const conversation = await prisma.conversation.create({
       data: {
+        id: `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         userId: user.id,
         title: title || 'New Conversation',
         model: 'PRIMEX',
+        updatedAt: new Date(),
       },
     });
 
@@ -34,6 +36,7 @@ export async function POST(req: NextRequest) {
     if (firstMessage) {
       await prisma.message.create({
         data: {
+          id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           conversationId: conversation.id,
           userId: user.id,
           role: 'user',

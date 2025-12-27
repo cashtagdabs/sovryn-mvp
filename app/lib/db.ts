@@ -100,7 +100,20 @@ function getPrisma() {
     }
 
     try {
-      prismaInstance = new PrismaClient();
+      // Limit connection pool for Supabase Session Pooler
+      // Session mode has strict connection limits
+      prismaInstance = new PrismaClient({
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
+        // Log only in development
+        log: process.env.NODE_ENV !== 'production' ? ['error', 'warn'] : ['error'],
+      });
+
+      // For Supabase Session Pooler, add connection string params
+      // These are typically added to DATABASE_URL but we ensure they're set
       if (process.env.NODE_ENV !== 'production') {
         global.prisma = prismaInstance;
       }

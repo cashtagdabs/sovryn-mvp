@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         {
-          messages: {
+          Message: {
             some: {
               content: { contains: search, mode: 'insensitive' },
             },
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
 
     // Build orderBy clause
     let orderBy: any = { createdAt: 'desc' };
-    
+
     if (sort === 'trending') {
       // For trending, we'll fetch and sort in memory
       // (SQLite doesn't support complex expressions in ORDER BY)
@@ -45,14 +45,14 @@ export async function GET(req: NextRequest) {
     const conversations = await prisma.conversation.findMany({
       where,
       include: {
-        user: {
+        User: {
           select: {
             name: true,
             username: true,
             avatarUrl: true,
           },
         },
-        messages: {
+        Message: {
           take: 2,
           orderBy: { createdAt: 'asc' },
           select: {
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         },
         _count: {
           select: {
-            messages: true,
+            Message: true,
           },
         },
       },
@@ -79,15 +79,15 @@ export async function GET(req: NextRequest) {
       id: conv.id,
       shareId: conv.shareId,
       title: conv.title,
-      preview: conv.messages[0]?.content.substring(0, 150) + '...',
+      preview: conv.Message[0]?.content.substring(0, 150) + '...',
       author: {
-        name: conv.user.name || conv.user.username || 'Anonymous',
-        avatar: conv.user.avatarUrl,
+        name: conv.User.name || conv.User.username || 'Anonymous',
+        avatar: conv.User.avatarUrl,
       },
       stats: {
         views: conv.viewCount,
         likes: conv.likeCount,
-        messages: conv._count.messages,
+        messages: conv._count.Message,
       },
       createdAt: conv.createdAt,
     }));

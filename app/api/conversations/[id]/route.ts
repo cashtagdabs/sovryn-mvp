@@ -25,10 +25,10 @@ export async function GET(req: NextRequest, { params }: any) {
         userId: user.id,
       },
       include: {
-        messages: {
+        Message: {
           orderBy: { createdAt: 'asc' },
           include: {
-            citations: true,
+            Citation: true,
           },
         },
       },

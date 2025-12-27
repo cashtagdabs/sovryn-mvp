@@ -179,6 +179,43 @@ export const AI_PROVIDERS: AIProvider[] = [
       },
     ],
   },
+  {
+    id: 'ollama',
+    name: 'Ollama (Local)',
+    models: [
+      {
+        id: 'gpt-oss-20b',
+        name: 'GPT OSS 20B',
+        provider: 'ollama',
+        contextWindow: 32768,
+        maxTokens: 4096,
+        inputCost: 0, // Local = FREE
+        outputCost: 0,
+        badge: 'CHEAPEST',
+        description: '🏠 LOCAL - Runs on your machine, fully private',
+      },
+      {
+        id: 'llama3.2:1b',
+        name: 'LLaMA 3.2 1B',
+        provider: 'ollama',
+        contextWindow: 131072,
+        maxTokens: 4096,
+        inputCost: 0,
+        outputCost: 0,
+        description: '🏠 LOCAL - Lightweight model for fast responses',
+      },
+      {
+        id: 'phi4-mini-reasoning',
+        name: 'Phi-4 Mini Reasoning',
+        provider: 'ollama',
+        contextWindow: 16384,
+        maxTokens: 4096,
+        inputCost: 0,
+        outputCost: 0,
+        description: '🏠 LOCAL - Microsoft reasoning model',
+      },
+    ],
+  },
 ];
 
 export const getModelById = (modelId: string): AIModel | undefined => {

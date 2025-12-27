@@ -4,6 +4,7 @@ import { prisma } from '@/app/lib/db';
 import { aiRouter } from '@/app/lib/ai/router';
 import { checkUsageLimit } from '@/app/lib/usage';
 import { canUseModel } from '@/app/lib/stripe';
+import { buildMessagesWithSystemPrompt } from '@/app/lib/ai/system-prompt';
 import { z } from 'zod';
 
 const chatRequestSchema = z.object({
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      include: { subscription: true },
+      include: { Subscription: true },
     });
 
     if (!user) {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check model access permissions
-    const userPlan = (user.subscription?.plan as any) || 'FREE';
+    const userPlan = (user.Subscription?.plan as any) || 'FREE';
     if (!canUseModel(userPlan, validatedData.modelId)) {
       return new Response(`Model ${validatedData.modelId} requires a higher subscription tier`, { status: 403 });
     }
@@ -69,9 +70,11 @@ export async function POST(req: NextRequest) {
       const title = validatedData.messages[0]?.content.slice(0, 100) || 'New Conversation';
       conversation = await prisma.conversation.create({
         data: {
+          id: `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           userId: user.id,
           title,
           model: validatedData.modelId as any,
+          updatedAt: new Date(),
         },
       });
     }
@@ -79,6 +82,7 @@ export async function POST(req: NextRequest) {
     // Save user message
     await prisma.message.create({
       data: {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId: conversation.id,
         userId: user.id,
         role: 'USER',
@@ -100,9 +104,12 @@ export async function POST(req: NextRequest) {
 
           // Stream the AI response with fallback
           try {
+            // Apply PRIMEX sovereign system prompt to all messages
+            const messagesWithSystemPrompt = buildMessagesWithSystemPrompt(validatedData.messages);
+
             for await (const chunk of aiRouter.chatStream({
               modelId: validatedData.modelId,
-              messages: validatedData.messages,
+              messages: messagesWithSystemPrompt,
               temperature: validatedData.temperature,
               maxTokens: validatedData.maxTokens,
               userId: user.id,
@@ -133,6 +140,7 @@ export async function POST(req: NextRequest) {
           // Save assistant message after streaming completes
           const assistantMessage = await prisma.message.create({
             data: {
+              id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
               conversationId: conversation.id,
               userId: user.id,
               role: 'ASSISTANT',

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      include: { subscription: true },
+      include: { Subscription: true },
     });
 
     if (!user) {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check model access permissions
-    const userPlan = (user.subscription?.plan as any) || 'FREE';
+    const userPlan = (user.Subscription?.plan as any) || 'FREE';
     if (!canUseModel(userPlan, validatedData.modelId)) {
       return NextResponse.json(
         { error: `Model ${validatedData.modelId} requires a higher subscription tier` },
@@ -72,9 +72,11 @@ export async function POST(req: NextRequest) {
       const title = validatedData.messages[0]?.content.slice(0, 100) || 'New Conversation';
       conversation = await prisma.conversation.create({
         data: {
+          id: `conv_${Date.now()}_${Math.random().toString(36).substring(7)}`,
           userId: user.id,
           title,
           model: validatedData.modelId as any,
+          updatedAt: new Date(),
         },
       });
     }
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
     // Save user message
     const userMessage = await prisma.message.create({
       data: {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId: conversation.id,
         userId: user.id,
         role: 'USER',
@@ -109,6 +112,7 @@ export async function POST(req: NextRequest) {
     // Save assistant message
     const assistantMessage = await prisma.message.create({
       data: {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId: conversation.id,
         userId: user.id,
         role: 'ASSISTANT',

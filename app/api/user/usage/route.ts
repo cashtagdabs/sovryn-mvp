@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     // Get user from database
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      include: { subscription: true },
+      include: { Subscription: true },
     });
 
     if (!user) {
@@ -30,10 +30,10 @@ export async function GET(req: NextRequest) {
         name: user.name,
         createdAt: user.createdAt,
       },
-      subscription: user.subscription ? {
-        plan: user.subscription.plan,
-        status: user.subscription.status,
-        currentPeriodEnd: user.subscription.stripeCurrentPeriodEnd,
+      subscription: user.Subscription ? {
+        plan: user.Subscription.plan,
+        status: user.Subscription.status,
+        currentPeriodEnd: user.Subscription.stripeCurrentPeriodEnd,
       } : null,
       usage,
     });

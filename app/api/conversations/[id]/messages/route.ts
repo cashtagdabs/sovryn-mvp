@@ -24,8 +24,8 @@ export async function POST(
     // Get user
     const clerkUser = await (await clerkClient()).users.getUser(userId);
     const email = clerkUser.emailAddresses[0]?.emailAddress || 'unknown@example.com';
-    const name = clerkUser.firstName && clerkUser.lastName 
-      ? `${clerkUser.firstName} ${clerkUser.lastName}` 
+    const name = clerkUser.firstName && clerkUser.lastName
+      ? `${clerkUser.firstName} ${clerkUser.lastName}`
       : clerkUser.username || undefined;
     const user = await getOrCreateUser(userId, email, name);
 
@@ -41,6 +41,7 @@ export async function POST(
     // Create message
     const message = await prisma.message.create({
       data: {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         conversationId,
         userId: user.id,
         role: role || 'user',
@@ -81,8 +82,8 @@ export async function GET(
     // Get user
     const clerkUser = await (await clerkClient()).users.getUser(userId);
     const email = clerkUser.emailAddresses[0]?.emailAddress || 'unknown@example.com';
-    const name = clerkUser.firstName && clerkUser.lastName 
-      ? `${clerkUser.firstName} ${clerkUser.lastName}` 
+    const name = clerkUser.firstName && clerkUser.lastName
+      ? `${clerkUser.firstName} ${clerkUser.lastName}`
       : clerkUser.username || undefined;
     const user = await getOrCreateUser(userId, email, name);
 
@@ -90,7 +91,7 @@ export async function GET(
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
       include: {
-        messages: {
+        Message: {
           orderBy: { createdAt: 'asc' },
         },
       },
@@ -100,7 +101,7 @@ export async function GET(
       return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ messages: conversation.messages });
+    return NextResponse.json({ messages: conversation.Message });
   } catch (error: any) {
     console.error('Get messages error:', error);
     return NextResponse.json(

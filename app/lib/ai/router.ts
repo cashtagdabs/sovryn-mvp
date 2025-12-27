@@ -436,42 +436,119 @@ export class AIRouter {
   }
 
   private async chatWithOllama(options: ChatCompletionOptions): Promise<ChatCompletionResponse> {
-    const response = await fetch(`${OLLAMA_API_URL}/api/generate`, {
+    // Translate model IDs that use dashes back to colons for Ollama
+    let ollamaModelId = options.modelId;
+    if (ollamaModelId === 'gpt-oss-20b') {
+      ollamaModelId = 'gpt-oss:20b';
+    }
+
+    // Use /api/chat endpoint for message-based conversation
+    const response = await fetch(`${OLLAMA_API_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: options.modelId,
-        messages: options.messages,
-        temperature: options.temperature,
-        max_tokens: options.maxTokens,
+        model: ollamaModelId,
+        messages: options.messages.map(m => ({
+          role: m.role,
+          content: m.content,
+        })),
+        stream: false,
+        options: {
+          temperature: options.temperature || 0.7,
+          num_predict: options.maxTokens || 2048,
+        },
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama request failed with status ${response.status}`);
+      const errorText = await response.text();
+      console.error('[Ollama] Error response:', errorText);
+      throw new Error(`Ollama request failed with status ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('[Ollama] Response data:', JSON.stringify(data).substring(0, 200));
 
     return {
-      content: data?.response || '',
+      content: data?.message?.content || data?.response || '',
       model: options.modelId,
-      usage: data?.usage
+      usage: data?.eval_count
         ? {
-          promptTokens: data.usage.prompt_tokens,
-          completionTokens: data.usage.completion_tokens,
-          totalTokens: data.usage.total_tokens,
+          promptTokens: data.prompt_eval_count,
+          completionTokens: data.eval_count,
+          totalTokens: (data.prompt_eval_count || 0) + (data.eval_count || 0),
         }
-        : data?.usage?.total_tokens
-          ? { totalTokens: data.usage.total_tokens }
-          : undefined,
+        : undefined,
     };
   }
 
   private async *chatStreamOllama(options: ChatCompletionOptions): AsyncGenerator<string> {
-    const completion = await this.chatWithOllama(options);
-    if (completion.content) {
-      yield completion.content;
+    // Translate model IDs that use dashes back to colons for Ollama
+    let ollamaModelId = options.modelId;
+    if (ollamaModelId === 'gpt-oss-20b') {
+      ollamaModelId = 'gpt-oss:20b';
+    }
+
+    console.log('[Ollama Stream] Starting stream for model:', ollamaModelId);
+
+    const response = await fetch(`${OLLAMA_API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: ollamaModelId,
+        messages: options.messages.map(m => ({
+          role: m.role,
+          content: m.content,
+        })),
+        stream: true,
+        options: {
+          temperature: options.temperature || 0.7,
+          num_predict: options.maxTokens || 2048,
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Ollama Stream] Error:', errorText);
+      throw new Error(`Ollama stream failed with status ${response.status}: ${errorText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body from Ollama');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const json = JSON.parse(line);
+            if (json.message?.content) {
+              yield json.message.content;
+            }
+            if (json.done) {
+              console.log('[Ollama Stream] Complete');
+              return;
+            }
+          } catch (e) {
+            console.warn('[Ollama Stream] Failed to parse line:', line);
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
     }
   }
 }

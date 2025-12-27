@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
     // Get user's subscription
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
-      include: { subscription: true },
+      include: { Subscription: true },
     });
 
-    if (!user || !user.subscription?.stripeCustomerId) {
+    if (!user || !user.Subscription?.stripeCustomerId) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
     }
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     const returnUrl = `${baseUrl}/dashboard`;
 
     const session = await createBillingPortalSession(
-      user.subscription.stripeCustomerId,
+      user.Subscription.stripeCustomerId,
       returnUrl
     );
 
