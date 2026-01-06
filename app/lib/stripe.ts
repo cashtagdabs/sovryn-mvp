@@ -32,64 +32,49 @@ export const STRIPE_CONFIG = {
   publishableKey: STRIPE_PUBLISHABLE_KEY,
 };
 
-// Subscription tiers
+// ===========================================
+// SOVRYN SUBSCRIPTION TIERS
+// "The AI That Doesn't Say No"
+// ===========================================
+
 export const SUBSCRIPTION_PLANS = {
-  FREE: {
-    name: 'Free',
-    price: 0,
-    priceId: null,
-    maxMessages: 100,
+  STARTER: {
+    name: 'Starter',
+    price: 29,
+    priceId: process.env.STRIPE_STARTER_PRICE_ID,
+    maxMessages: 1000,
+    tagline: 'ChatGPT without the nanny',
     features: [
-      '100 messages per month',
-      'PRIMEX Ultra AI',
-      'GPT-3.5 Turbo',
-      'Basic support',
-      'Conversation history'
+      '1,000 messages per month',
+      'Uncensored responses',
+      'No content restrictions',
+      'GPT-4, Claude 3, Mixtral',
+      'Conversation history',
+      'Email support',
     ],
     models: [
-      'gpt-3.5-turbo',
-      'primex-ultra',
-      'primex-architect',
-      'primex-cortex',
-    ],
-  },
-  PRO: {
-    name: 'Pro',
-    price: 20,
-    priceId: process.env.STRIPE_PRO_PRICE_ID,
-    maxMessages: -1, // Unlimited
-    features: [
-      'Unlimited messages',
-      'PRIMEX Ultra AI',
-      'GPT-4, Claude 3, Groq',
-      'Priority support',
-      'Advanced features',
-      'Export conversations'
-    ],
-    models: [
-      'primex-ultra',
-      'primex-architect',
-      'primex-cortex',
       'gpt-4-turbo-preview',
-      'gpt-4',
       'gpt-3.5-turbo',
       'claude-3-sonnet-20240229',
       'claude-3-haiku-20240307',
       'mixtral-8x7b-32768',
     ],
+    highlight: false,
   },
-  ENTERPRISE: {
-    name: 'Enterprise',
-    price: 99,
-    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID,
-    maxMessages: -1,
+  PROFESSIONAL: {
+    name: 'Professional',
+    price: 79,
+    priceId: process.env.STRIPE_PROFESSIONAL_PRICE_ID,
+    maxMessages: -1, // Unlimited
+    tagline: 'For those who need real answers',
     features: [
-      'Everything in Pro',
-      'Claude 3 Opus',
-      'Priority model access',
-      'Custom integrations',
-      'Dedicated support',
-      'Usage analytics'
+      'Unlimited messages',
+      'All uncensored models',
+      'Priority response speed',
+      'GPT-4, Claude 3 Opus, Groq',
+      'PRIMEX AI clones',
+      'Export & API access',
+      'Priority support',
     ],
     models: [
       'primex-ultra',
@@ -104,19 +89,22 @@ export const SUBSCRIPTION_PLANS = {
       'mixtral-8x7b-32768',
       'llama2-70b-4096',
     ],
+    highlight: true, // Most popular
   },
   SOVEREIGN: {
     name: 'Sovereign',
-    price: 499,
+    price: 299,
     priceId: process.env.STRIPE_SOVEREIGN_PRICE_ID,
     maxMessages: -1,
+    tagline: '100% local, zero cloud',
     features: [
-      'Everything in Enterprise',
-      'PRIMEX AI access',
-      'Custom model training',
-      'White-label options',
-      'API access',
-      'Dedicated infrastructure'
+      'Everything in Professional',
+      'Local deployment option',
+      'Your hardware, your data',
+      'Zero cloud dependency',
+      'Custom model fine-tuning',
+      'White-label available',
+      'Dedicated support channel',
     ],
     models: [
       'primex-ultra',
@@ -133,6 +121,42 @@ export const SUBSCRIPTION_PLANS = {
       'llama2-70b-4096',
       'llama2-7b-uncensored:q4_0',
     ],
+    highlight: false,
+  },
+  ENTERPRISE: {
+    name: 'Enterprise',
+    price: 999,
+    priceId: process.env.STRIPE_ENTERPRISE_PRICE_ID,
+    maxMessages: -1,
+    tagline: 'HIPAA-ready, compliance-first',
+    features: [
+      'Everything in Sovereign',
+      'HIPAA compliance pathway',
+      'BAA available',
+      'SOC 2 documentation',
+      'Dedicated infrastructure',
+      'Custom integrations',
+      'SLA guarantee',
+      'Dedicated account manager',
+      'On-call support',
+    ],
+    models: [
+      'primex-ultra',
+      'primex-architect',
+      'primex-cortex',
+      'primex-sovereign',
+      'primex-enterprise',
+      'gpt-4-turbo-preview',
+      'gpt-4',
+      'gpt-3.5-turbo',
+      'claude-3-opus-20240229',
+      'claude-3-sonnet-20240229',
+      'claude-3-haiku-20240307',
+      'mixtral-8x7b-32768',
+      'llama2-70b-4096',
+      'llama2-7b-uncensored:q4_0',
+    ],
+    highlight: false,
   },
 } as const;
 

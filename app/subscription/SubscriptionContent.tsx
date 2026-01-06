@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Check, Crown, Zap, Shield, Sparkles, CreditCard, ArrowLeft } from 'lucide-react';
+import { Check, Zap, Shield, Crown, Sparkles, CreditCard, ArrowLeft } from 'lucide-react';
 import { SUBSCRIPTION_PLANS } from '@/app/lib/stripe';
 import { cn } from '@/app/lib/utils';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ interface UserUsage {
 }
 
 export function SubscriptionContent() {
-  const [currentPlan, setCurrentPlan] = useState<string>('FREE');
+  const [currentPlan, setCurrentPlan] = useState<string>('STARTER');
   const [usage, setUsage] = useState<UserUsage | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -30,7 +30,7 @@ export function SubscriptionContent() {
       if (response.ok) {
         const data = await response.json();
         setUsage(data.usage);
-        setCurrentPlan(data.usage.plan);
+        setCurrentPlan(data.usage.plan || 'STARTER');
       }
     } catch (error) {
       console.error('Failed to fetch user data:', error);
@@ -38,8 +38,8 @@ export function SubscriptionContent() {
   };
 
   const handleSubscribe = async (planKey: string) => {
-    if (planKey === 'FREE') {
-      toast.error('Free plan selected — no action needed');
+    if (planKey === currentPlan) {
+      toast.error('You are already on this plan');
       return;
     }
     
@@ -55,13 +55,11 @@ export function SubscriptionContent() {
         body: JSON.stringify({ plan: planKey }),
       });
 
-      // read response safely
       const text = await response.text();
       let data: any = {};
       try {
         data = text ? JSON.parse(text) : {};
       } catch (e) {
-        // not JSON
         data = { raw: text };
       }
 
@@ -75,20 +73,16 @@ export function SubscriptionContent() {
         throw new Error(data?.error || data?.raw || 'Failed to create subscription');
       }
 
-      // Redirect to Stripe checkout or handle client secret
       if (data.clientSecret) {
-        // Handle Stripe payment intent (legacy flow)
         window.location.href = `/checkout?subscription_id=${data.subscriptionId}&client_secret=${data.clientSecret}`;
         return;
       }
 
-      // If Stripe returned a hosted checkout URL, open it
       if (data.url) {
         window.location.href = data.url;
         return;
       }
 
-      // otherwise show success toast
       toast.success('Subscription flow started. Follow the next steps.');
     } catch (error: any) {
       console.error('handleSubscribe error', error);
@@ -134,17 +128,17 @@ export function SubscriptionContent() {
   };
 
   const planIcons = {
-    FREE: Sparkles,
-    PRO: Zap,
-    ENTERPRISE: Crown,
+    STARTER: Sparkles,
+    PROFESSIONAL: Zap,
     SOVEREIGN: Shield,
+    ENTERPRISE: Crown,
   };
 
   const planColors = {
-    FREE: 'from-gray-500 to-gray-600',
-    PRO: 'from-purple-500 to-pink-500',
-    ENTERPRISE: 'from-blue-500 to-cyan-500',
+    STARTER: 'from-blue-500 to-cyan-500',
+    PROFESSIONAL: 'from-purple-500 to-pink-500',
     SOVEREIGN: 'from-red-500 to-orange-500',
+    ENTERPRISE: 'from-yellow-500 to-amber-500',
   };
 
   return (
@@ -161,9 +155,9 @@ export function SubscriptionContent() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <h1 className="text-2xl font-bold text-white">Subscription Plans</h1>
+              <h1 className="text-2xl font-bold text-white">Upgrade Your Plan</h1>
             </div>
-            {currentPlan !== 'FREE' && (
+            {currentPlan !== 'STARTER' && (
               <button
                 onClick={handleManageBilling}
                 className="flex items-center space-x-2 rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm hover:bg-white/10"
@@ -184,7 +178,7 @@ export function SubscriptionContent() {
               <h3 className="text-lg font-semibold text-white mb-4">Current Usage</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <p className="text-sm text-white/60">Plan</p>
+                  <p className="text-sm text-white/60">Current Plan</p>
                   <p className="text-xl font-bold text-white">{usage.plan}</p>
                 </div>
                 <div>
@@ -227,10 +221,10 @@ export function SubscriptionContent() {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Choose Your AI Experience
+              Choose Your Level of Sovereignty
             </h2>
             <p className="text-xl text-white/70">
-              Unlock the full potential of multi-model AI
+              The AI that doesn't say no. Private. Uncensored. Yours.
             </p>
           </div>
 
@@ -238,7 +232,7 @@ export function SubscriptionContent() {
             {Object.entries(SUBSCRIPTION_PLANS).map(([planKey, plan], index) => {
               const Icon = planIcons[planKey as keyof typeof planIcons];
               const isCurrentPlan = currentPlan === planKey;
-              const isPopular = planKey === 'PRO';
+              const isPopular = plan.highlight;
 
               return (
                 <motion.div
@@ -249,12 +243,13 @@ export function SubscriptionContent() {
                   className={cn(
                     'relative rounded-2xl border p-8 backdrop-blur-sm',
                     isCurrentPlan
-                      ? 'border-purple-500 bg-purple-500/10'
-                      : 'border-white/10 bg-white/5',
-                    isPopular && 'ring-2 ring-purple-500/50'
+                      ? 'border-green-500 bg-green-500/10'
+                      : isPopular
+                      ? 'border-purple-500 bg-purple-500/10 ring-2 ring-purple-500/50'
+                      : 'border-white/10 bg-white/5'
                   )}
                 >
-                  {isPopular && (
+                  {isPopular && !isCurrentPlan && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1 text-xs font-semibold text-white">
                         Most Popular
@@ -279,15 +274,11 @@ export function SubscriptionContent() {
                     </div>
 
                     <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                    <p className="text-sm text-white/60 mt-1 mb-4">{plan.tagline}</p>
+                    
                     <div className="mt-4 mb-6">
-                      {plan.price === 0 ? (
-                        <span className="text-4xl font-bold text-white">Free</span>
-                      ) : (
-                        <>
-                          <span className="text-4xl font-bold text-white">${plan.price}</span>
-                          <span className="text-white/60">/month</span>
-                        </>
-                      )}
+                      <span className="text-4xl font-bold text-white">${plan.price}</span>
+                      <span className="text-white/60">/month</span>
                     </div>
 
                     <ul className="mb-8 space-y-3 text-left">
@@ -300,8 +291,8 @@ export function SubscriptionContent() {
                     </ul>
 
                     {isCurrentPlan ? (
-                      <div className="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white">
-                        Current Plan
+                      <div className="rounded-lg bg-green-500/20 border border-green-500/30 px-4 py-2 text-sm font-medium text-green-400">
+                        Your Current Plan
                       </div>
                     ) : (
                       <button
@@ -314,15 +305,13 @@ export function SubscriptionContent() {
                         type="button"
                         className={cn(
                           'w-full rounded-lg px-4 py-3 font-semibold text-white transition-all cursor-pointer',
-                          planKey === 'FREE'
-                            ? 'bg-white/10 hover:bg-white/20 disabled:cursor-not-allowed'
-                            : cn(
-                                'bg-gradient-to-r hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
-                                planColors[planKey as keyof typeof planColors]
-                              )
+                          cn(
+                            'bg-gradient-to-r hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
+                            planColors[planKey as keyof typeof planColors]
+                          )
                         )}
                       >
-                        {loading ? 'Processing...' : (planKey === 'FREE' ? 'Downgrade' : 'Upgrade Now')}
+                        {loading ? 'Processing...' : 'Upgrade Now'}
                       </button>
                     )}
                   </div>
@@ -330,6 +319,10 @@ export function SubscriptionContent() {
               );
             })}
           </div>
+
+          <p className="text-center text-white/50 mt-8">
+            All plans include 7-day free trial. Cancel anytime. No questions asked.
+          </p>
         </div>
       </div>
     </div>
