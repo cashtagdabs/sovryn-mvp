@@ -1,0 +1,73 @@
+# Docker Compose for Sovryn Browser Streaming Service
+# Run with: docker-compose -f docker-compose.browser.yml up -d
+
+version: '3.8'
+
+services:
+  browser-service:
+    build:
+      context: ./browser-service
+      dockerfile: Dockerfile
+    container_name: sovryn-browser-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"      # HTTP/WebSocket API
+      - "5900:5900"      # VNC (for debugging)
+      - "6080-6090:6080-6090"  # WebSocket VNC proxies
+    environment:
+      - NODE_ENV=production
+      - BROWSER_SERVICE_PORT=3001
+      - BROWSER_SERVICE_HOST=0.0.0.0
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - DISPLAY=:99
+    volumes:
+      # Persist browser data (cookies, cache)
+      - browser-data:/home/node/.config/chromium
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    # Security options
+    security_opt:
+      - seccomp:unconfined
+    shm_size: '2gb'  # Shared memory for Chrome
+    networks:
+      - sovryn-network
+
+  # Optional: Redis for session persistence across restarts
+  redis:
+    image: redis:7-alpine
+    container_name: sovryn-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sovryn-network
+
+volumes:
+  browser-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  sovryn-network:
+    driver: bridge
