@@ -10,11 +10,19 @@ interface BrowserInstance {
   shouldStop: boolean;
 }
 
+interface PageInfo {
+  url: string;
+  title: string;
+  content: string;
+}
+
 class PuppeteerController extends EventEmitter {
   private instances: Map<string, BrowserInstance> = new Map();
+  private isMac: boolean;
 
   constructor() {
     super();
+    this.isMac = process.platform === 'darwin';
     this.setupSessionListeners();
   }
 
@@ -50,33 +58,44 @@ class PuppeteerController extends EventEmitter {
   }
 
   async launchBrowser(session: BrowserSession): Promise<void> {
-    const displayNum = session.displayNum;
-    
-    console.log(`[PuppeteerController] Launching browser for session ${session.id} on display :${displayNum}`);
+    console.log(`[PuppeteerController] Launching browser for session ${session.id} (platform: ${process.platform})`);
 
     try {
-      const browser = await puppeteer.launch({
-        headless: false,
-        args: [
-          `--display=:${displayNum}`,
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--window-size=1920,1080',
-          '--start-maximized',
-        ],
+      // Mac-compatible launch options (no Xvfb needed)
+      const launchOptions: any = {
+        headless: false, // Show browser window for live viewing
         defaultViewport: {
           width: 1920,
           height: 1080,
         },
-      });
+        args: [
+          '--window-size=1920,1080',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process',
+        ],
+      };
 
+      // Add Linux-specific args only when not on Mac
+      if (!this.isMac) {
+        const displayNum = session.displayNum || 99;
+        launchOptions.args.push(
+          `--display=:${displayNum}`,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu'
+        );
+      }
+
+      const browser = await puppeteer.launch(launchOptions);
       const page = await browser.newPage();
       
-      // Set a reasonable timeout
+      // Set timeouts
       page.setDefaultTimeout(30000);
       page.setDefaultNavigationTimeout(30000);
+
+      // Enable request interception for better control
+      await page.setRequestInterception(false);
 
       const instance: BrowserInstance = {
         browser,
@@ -153,11 +172,9 @@ class PuppeteerController extends EventEmitter {
       let result = 'Step completed';
       
       if (script) {
-        // Execute custom script
         result = await instance.page.evaluate(script);
       }
 
-      // Take screenshot after step
       const screenshot = await instance.page.screenshot({ encoding: 'base64' });
 
       const step = sessionManager.addStep(sessionId, {
@@ -190,12 +207,68 @@ class PuppeteerController extends EventEmitter {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    await instance.page.click(selector);
-    sessionManager.addStep(sessionId, {
-      action: `Click on ${selector}`,
-      result: 'Clicked successfully',
-      status: 'completed',
-    });
+    try {
+      // Try multiple selector strategies
+      await this.smartClick(instance.page, selector);
+      
+      sessionManager.addStep(sessionId, {
+        action: `Click on ${selector}`,
+        result: 'Clicked successfully',
+        status: 'completed',
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      sessionManager.addStep(sessionId, {
+        action: `Click on ${selector}`,
+        result: `Failed: ${errorMessage}`,
+        status: 'failed',
+      });
+      throw error;
+    }
+  }
+
+  // Smart click that tries multiple selector strategies
+  private async smartClick(page: Page, selector: string): Promise<void> {
+    // Strategy 1: Direct CSS selector
+    try {
+      await page.click(selector);
+      return;
+    } catch (e) {}
+
+    // Strategy 2: XPath
+    try {
+      const [element] = await page.$x(selector);
+      if (element) {
+        await element.click();
+        return;
+      }
+    } catch (e) {}
+
+    // Strategy 3: Text content match
+    try {
+      const textSelector = selector.replace(/^.*:contains\(['"](.+)['"]\).*$/, '$1');
+      if (textSelector !== selector) {
+        await page.evaluate((text) => {
+          const elements = document.querySelectorAll('button, a, input[type="submit"], [role="button"]');
+          for (const el of elements) {
+            if (el.textContent?.toLowerCase().includes(text.toLowerCase())) {
+              (el as HTMLElement).click();
+              return;
+            }
+          }
+          throw new Error(`No element found with text: ${text}`);
+        }, textSelector);
+        return;
+      }
+    } catch (e) {}
+
+    // Strategy 4: Aria label
+    try {
+      await page.click(`[aria-label="${selector}"]`);
+      return;
+    } catch (e) {}
+
+    throw new Error(`Could not find element: ${selector}`);
   }
 
   async type(sessionId: string, selector: string, text: string): Promise<void> {
@@ -206,10 +279,56 @@ class PuppeteerController extends EventEmitter {
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    await instance.page.type(selector, text);
+    try {
+      // Clear existing content first
+      await instance.page.click(selector, { clickCount: 3 });
+      await instance.page.type(selector, text);
+      
+      sessionManager.addStep(sessionId, {
+        action: `Type into ${selector}`,
+        result: 'Text entered successfully',
+        status: 'completed',
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      sessionManager.addStep(sessionId, {
+        action: `Type into ${selector}`,
+        result: `Failed: ${errorMessage}`,
+        status: 'failed',
+      });
+      throw error;
+    }
+  }
+
+  async scroll(sessionId: string, direction: 'up' | 'down'): Promise<void> {
+    const instance = this.instances.get(sessionId);
+    if (!instance) throw new Error(`Session ${sessionId} not found`);
+
+    while (instance.isPaused && !instance.shouldStop) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    const scrollAmount = direction === 'down' ? 500 : -500;
+    await instance.page.evaluate((amount) => {
+      window.scrollBy(0, amount);
+    }, scrollAmount);
+
     sessionManager.addStep(sessionId, {
-      action: `Type into ${selector}`,
-      result: 'Text entered successfully',
+      action: `Scroll ${direction}`,
+      result: `Scrolled ${direction} by 500px`,
+      status: 'completed',
+    });
+  }
+
+  async pressKey(sessionId: string, key: string): Promise<void> {
+    const instance = this.instances.get(sessionId);
+    if (!instance) throw new Error(`Session ${sessionId} not found`);
+
+    await instance.page.keyboard.press(key as any);
+    
+    sessionManager.addStep(sessionId, {
+      action: `Press key: ${key}`,
+      result: 'Key pressed',
       status: 'completed',
     });
   }
@@ -221,12 +340,61 @@ class PuppeteerController extends EventEmitter {
     await instance.page.waitForSelector(selector, { timeout });
   }
 
+  async wait(sessionId: string, ms: number = 2000): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, ms));
+    
+    sessionManager.addStep(sessionId, {
+      action: `Wait ${ms}ms`,
+      result: 'Wait completed',
+      status: 'completed',
+    });
+  }
+
   async getScreenshot(sessionId: string): Promise<string> {
     const instance = this.instances.get(sessionId);
     if (!instance) throw new Error(`Session ${sessionId} not found`);
 
     const screenshot = await instance.page.screenshot({ encoding: 'base64' });
     return `data:image/png;base64,${screenshot}`;
+  }
+
+  async getPageInfo(sessionId: string): Promise<PageInfo> {
+    const instance = this.instances.get(sessionId);
+    if (!instance) throw new Error(`Session ${sessionId} not found`);
+
+    const url = instance.page.url();
+    const title = await instance.page.title();
+    
+    // Get simplified page content for LLM
+    const content = await instance.page.evaluate(() => {
+      // Get all interactive elements
+      const interactiveElements: string[] = [];
+      
+      // Buttons
+      document.querySelectorAll('button').forEach((el, i) => {
+        const text = el.textContent?.trim() || el.getAttribute('aria-label') || '';
+        if (text) interactiveElements.push(`[Button ${i}]: ${text}`);
+      });
+      
+      // Links
+      document.querySelectorAll('a').forEach((el, i) => {
+        const text = el.textContent?.trim() || '';
+        const href = el.getAttribute('href') || '';
+        if (text) interactiveElements.push(`[Link ${i}]: ${text} (${href})`);
+      });
+      
+      // Inputs
+      document.querySelectorAll('input, textarea').forEach((el, i) => {
+        const type = el.getAttribute('type') || 'text';
+        const placeholder = el.getAttribute('placeholder') || '';
+        const name = el.getAttribute('name') || '';
+        interactiveElements.push(`[Input ${i}]: ${type} - ${name || placeholder}`);
+      });
+
+      return interactiveElements.join('\n');
+    });
+
+    return { url, title, content };
   }
 
   async getPageContent(sessionId: string): Promise<string> {
